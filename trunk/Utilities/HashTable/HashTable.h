@@ -1,8 +1,106 @@
 #ifndef _HASHTABLE_
 #define _HASHTABLE_
 
-#include "HashObject.h"
-#include "iostream.h"
+
+#include <stdio.h>
+#include <iostream>
+
+
+
+template <class T, class K>
+class HashObject
+{
+public:
+	T key;
+	bool free;
+	K* content;
+	HashObject();
+	HashObject(T);
+	HashObject(T,K);
+	HashObject<T,K>& operator=(HashObject<T,K>&);
+	bool operator==(HashObject<T,K>&);
+	void deleteContent();
+	T getKey();
+	K* getContent();
+	bool isEqKey(T);
+	~HashObject();
+};
+template <class T, class K>
+HashObject<T,K>::HashObject()
+{
+	key=(T)0;
+	free=true;
+	content=NULL;
+}
+template <class T, class K>
+HashObject<T,K>::HashObject(T a)
+{
+	free=true;
+	content=NULL;
+	key=a;
+}
+template <class T, class K>
+HashObject<T,K>::HashObject(T a,K b)
+{
+	key=a;
+	free=false;
+	content=new K(b);
+}
+template <class T, class K>
+HashObject<T,K>& HashObject<T,K>::operator =(HashObject<T,K>& obj)
+{
+	key=obj.key;
+	free=obj.free;
+	content=obj.content;
+	return this;
+}
+template <class T, class K>
+bool HashObject<T,K>::operator ==(HashObject<T,K>& obj)
+{
+	return *(content)==*(obj.content);
+}
+template <class T, class K>
+void HashObject<T,K>::deleteContent()
+{
+	if(content)
+	{
+		delete content;
+		content=NULL;
+	}
+}
+template <class T, class K>
+T HashObject<T,K>::getKey()
+{
+	return key;
+}
+template <class T, class K>
+K* HashObject<T,K>::getContent()
+{
+	return content;
+}
+template <class T, class K>
+bool HashObject<T,K>::isEqKey(T a)
+{
+	return key==a;
+}
+template <class T, class K>
+HashObject<T,K>::~HashObject()
+{
+	if(content)
+	{
+		delete content;
+		content=NULL;
+	}
+}
+
+
+
+
+
+
+
+
+
 
 template <class T, class K>
 class HashTable
@@ -102,29 +200,7 @@ void HashTable<T,K>::withdraw(K a)
 	}
 
 }
-template <class T, class K>
-void HashTable<T,K>::print()
-{
-	for(int i=0;i<lenght;i++)
-		if(array[i].content==NULL)
-		{
-			cout.width(4);
-			cout << array[i].key;
-			cout.width(3);
-			cout << array[i].free;
-			cout.width(10);
-			cout <<  "0" << endl;
-		}
-		else 
-		{
-			cout.width(4);
-			cout << array[i].key;
-			cout.width(3);
-			cout << array[i].free;
-			cout.width(10);
-			cout <<  *(array[i].content) << endl;
-		}
-}
+
 
 template <class T, class K>
 HashTable<T,K>::~HashTable()
@@ -134,6 +210,8 @@ HashTable<T,K>::~HashTable()
 			array[i].deleteContent();
 	delete [] array;
 }
+
+
 
 #endif
 
