@@ -17,7 +17,9 @@ public:
 	void add_parent(Variable* parent);
 	void add_child(Variable* child);
 private:
-	int variable_counter;
+	static int var_counter;
 	LinkedList<Variable> parents;
 	LinkedList<Variable> children;
+	CPT* cpt;
+	//int sampled_value;
 };

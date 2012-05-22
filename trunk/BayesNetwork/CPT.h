@@ -15,5 +15,6 @@ public:
 	float get_prob(int* parent_values);
 	int generate_value(int* parent_values);
 private:
-	float* table;
+	void* table;
+	int num_parents;
 };
