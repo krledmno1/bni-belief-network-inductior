@@ -2,15 +2,19 @@
  * DataTable.h
  *
  * Created on: May 21, 2012
- *
+ *      Author: Denis
  */
 
-static class DataTable {
-public:
-	static int get_size();
-	int* get_case(int i);
-	int get_num_vars();
+class DataTable {
 private:
 	int table[][];
-	void populate_table();
+	int numCases;
+	int numVars;
+
+public:
+	static void populateTable();
+	static int getSize();
+	static int* getCase(int i);
+	static int getNumVars();
+
 };

@@ -2,16 +2,22 @@
  * ValuesMap.h
  *
  * Created on: May 21, 2012
- *
+ *      Author: Denis
  */
 
-static class ValuesMap {
-public:
-	ValuesMap(int num_vars);
-	~ValuesMap();
-	int get_num_values(int node_id);
-	void add_value(int node_id, char* value);
-	char* get_value_name(int node_id, int value_id);
+class ValuesMap {
 private:
-	LinkedList<char*> table[];
+	static LinkedList<char*> table[];
+	static int numVars;
+	static ValuesMap instance;
+	ValuesMap(int numVars);
+	ValuesMap();
+
+public:
+	static ValuesMap* get();
+	static void setNumVars(int numVars);
+	int getNumValues(int varId);
+	void addValue(int varId, char* value);
+	char* getValueName(int varId, int valueId);
+
 };
