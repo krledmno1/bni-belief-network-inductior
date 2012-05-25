@@ -9,6 +9,9 @@
 #include "Variable.h"
 
 class BayesNetwork {
+private:
+	Variable vars[];
+
 public:
 	BayesNetwork(int numVars);
 	BayesNetwork(int numVars, char** varNames);
@@ -16,6 +19,23 @@ public:
 	double learnStructure();
 	void createProbTables();
 	DataTable generateData();
-private:
-	Variable vars[];
+
 };
+
+BayesNetwork::BayesNetwork(int numVars) {
+	vars = new Variable[numVars];
+	char* name;
+	for(int i = 0; i < numVars; i++) {
+		sprintf(name, "%d", i);
+		vars[i] = new Variable(name);
+	}
+
+	delete[] name;
+}
+
+BayesNetwork::BayesNetwork(int numVars, char** varNames) {
+	vars = new Variable[numVars];
+	for(int i = 0; i < numVars; i++) {
+		vars[i] = new Variable(varNames[i]);
+	}
+}
