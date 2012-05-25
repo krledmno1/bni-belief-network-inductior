@@ -5,22 +5,24 @@
  *      Author: Denis
  */
 
-#include "LinkedList.h"
-#include "Variable.h"
+#include "Utilities/LinkedList/LinkedList.h"
+#include "BayesNetwork/Variable.h"
+#include "BayesNetwork/BayesNetwork.h"
 #include <time.h>
+#include <iostream.h>
 
 class DataTable {
 private:
-	int table[][];
+	int** table;
 	int numCases;
 	int numVars;
 	DataTable();
 
 public:
-	static DataTable getRandomTable(int numCases, int numVars, int minNumValues = 2, int maxNumValues);
-	static DataTable getRandomTable(int numCases, LinkedList<Variable>);
-	static DataTable getTableFromFile(char* filePath);
-	static DataTable generateTableFromBN(BayesNewtork* network);
+	static DataTable* getRandomTable(int numCases, int numVars, int maxNumValues, int minNumValues);
+	static DataTable* getRandomTable(int numCases, LinkedList<Variable> variables);
+	static DataTable* getTableFromFile(char* filePath);
+	static DataTable* generateTableFromBN(BayesNetwork* network);
 	int getNumCases();
 	int* getCase(int index);
 	int getNumVars();
@@ -38,15 +40,19 @@ int* DataTable::getCase(int index) {
 	return table[index];
 }
 
-static DataTable DataTable::getRandomTable(int numCases, int numVars, int minNumValues = 2, int maxNumValues) {
+DataTable* DataTable::getRandomTable(int numCases, int numVars, int maxNumValues, int minNumValues = 2) {
 
 	if(minNumValues < 2 || minNumValues > maxNumValues || numCases <= 0 || numVars <= 0) {
 		cout << "Incorrect parameters!";
 		return NULL;
 	}
 
-	DataTable dataTable = new DataTable();
-	dataTable.table = new table[numCases][numVars];
+	DataTable dataTable = new DataTable::DataTable();
+	dataTable.table = new int* [numCases];
+	for(int i = 0; i < numCases; i++) {
+		dataTable.table[i] = new int [numVars];
+	}
+
 	Variable* vars[] = new Variable* [numVars];
 
 	srand((unsigned int) time(0));
@@ -82,5 +88,5 @@ static DataTable DataTable::getRandomTable(int numCases, int numVars, int minNum
 	dataTable.numCases = numCases;
 	dataTable.numVars = numVars;
 
-	return dataTable;
+	return &dataTable;
 }
