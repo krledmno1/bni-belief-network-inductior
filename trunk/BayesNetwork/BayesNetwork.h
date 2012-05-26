@@ -4,9 +4,13 @@
  * Created on: May 21, 2012
  *      Author: Denis
  */
+#ifndef BAYESNETWORK_H_
+#define BAYESNETWORK_H_
+
 
 #include "DataTable.h"
 #include "Variable.h"
+
 
 class BayesNetwork {
 private:
@@ -39,3 +43,5 @@ BayesNetwork::BayesNetwork(int numVars, char** varNames) {
 		vars[i] = new Variable(varNames[i]);
 	}
 }
+
+#endif

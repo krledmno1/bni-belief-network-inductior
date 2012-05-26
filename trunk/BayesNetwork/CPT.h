@@ -4,8 +4,13 @@
  * Created on: May 21, 2012
  *      Author: Denis
  */
+#ifndef CPT_H_
+#define CPT_H_
 
-#include "LinkedList.h"
+#include "../Utilities/LinkedList/LinkedList.h"
+
+
+class Variable;
 
 class CPT {
 private:
@@ -14,6 +19,8 @@ private:
 
 public:
 	CPT(LinkedList<Variable>  parents);
+	CPT();
+
 	~CPT();
 	void setProb(int* parent_values, float value);
 	float getProb(int* parent_values);
@@ -21,6 +28,20 @@ public:
 
 };
 
+CPT::CPT()
+{
+
+}
+
 CPT::CPT(LinkedList<Variable> parents) {
 
 }
+
+CPT::~CPT()
+{
+
+}
+
+#include "Variable.h"
+
+#endif

@@ -4,8 +4,13 @@
  * Created on: May 21, 2012
  *
  */
+#ifndef VARIABLE_H_
+#define VARIABLE_H_
 
-#include "CPT.h"
+#include "../Utilities/LinkedList/LinkedList.h"
+#include <stdlib.h>
+
+class CPT;
 
 class Variable {
 private:
@@ -32,32 +37,30 @@ public:
 int Variable::var_counter = 0;
 
 Variable::Variable(char* name) {
-	this.id = varCounter;
-	varCounter++;
+	this->id = var_counter;
+	var_counter++;
 
-	this.name = name;
-	this.parents = new LinkedList<Variable>();
-	this.children = new LinkedList<Variable>();
-	this.cpt = new CPT();
-	this.values = new LinkedList<char*>();
+	this->name = name;
+	this->cpt = new CPT();
+
 }
 
 Variable::~Variable() {
-	delete parents;
-	delete children;
+	parents.removeAll();
+	children.removeAll();
 	delete cpt;
 	delete [] name;
-	delete id;
+
 
 }
 
 void Variable::addParent(Variable* parent) {
-	this.parents.addToBack(parent);
+	this->parents.addToBack(parent);
 	parent->addChild(this);
 }
 
 void Variable::addChild(Variable* child) {
-	this.children.addToBack(child);
+	this->children.addToBack(child);
 }
 
 int Variable::getNumValues() {
@@ -83,3 +86,8 @@ char* Variable::getValueName(int valueId) {
 		return NULL;
 
 }
+
+#include "CPT.h"
+
+
+#endif

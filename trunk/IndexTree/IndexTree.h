@@ -8,7 +8,7 @@
 #ifndef INDEXTREE_H_
 #define INDEXTREE_H_
 
-#include "LinkedList.h"
+#include "../Utilities/LinkedList/LinkedList.h"
 #include "BranchNode.h"
 #include "LeafNode1.h"
 
@@ -23,8 +23,8 @@ public:
 	virtual ~IndexTree();
 
 private:
-	TreeNode* root;
-	LinkedList<LeafNode<T>> leaves;
+	TreeNode<T>* root;
+	LinkedList<LeafNode<T> > leaves;
 
 };
 
