@@ -7,7 +7,8 @@
 #ifndef VARIABLE_H_
 #define VARIABLE_H_
 
-#include "Utilities\LinkedList\LinkedList.h"
+#include "../Utilities/LinkedList/LinkedList.h"
+//#include "Utilities\LinkedList\LinkedList.h"
 //#include "CPT.h"
 #include <string>
 #include <iostream>
@@ -27,8 +28,8 @@ private:
 
 public:
 	int id;
-	string name;
-	Variable(string name);
+	string* name;
+	Variable(string* name);
 
 	~Variable();
 	void addParent(Variable* parent);
@@ -44,7 +45,7 @@ public:
 int Variable::varCounter = 0;
 
 
-Variable::Variable(string name) {
+Variable::Variable(string* name) {
 	id = varCounter;
 	varCounter++;
 
@@ -57,18 +58,20 @@ Variable::Variable(string name) {
 Variable::~Variable() {
 	delete parents;
 	delete children;
-	/*delete cpt;
-	delete [] name;*/
+	delete this->values;
+	/*delete cpt;*/
+	delete  name;
 
 }
 
 void Variable::addParent(Variable* parent) {
 	this->parents->addToBack(parent);
-	parent->addChild(this);
+	parent->children->addToBack(this);
 }
 
 void Variable::addChild(Variable* child) {
 	this->children->addToBack(child);
+	child->parents->addToBack(this);
 }
 
 int Variable::getNumValues() {
@@ -76,6 +79,9 @@ int Variable::getNumValues() {
 }
 
 int Variable::addValue(string* value) {
+
+	//for(Node<string>* node = values->start;node!=NULL;node=node->getNext())
+
 	Node<string>* node = values->start;
 
 	int i = 0;
@@ -83,6 +89,7 @@ int Variable::addValue(string* value) {
 	while(node != NULL) {
 		nodeContent = node->getContent();
 		if(nodeContent->compare(*value) == 0) {
+			delete value;
 			return i;
 		}
 		i++;
@@ -95,6 +102,7 @@ int Variable::addValue(string* value) {
 
 string* Variable::getValueName(int valueId) {
 	Node<string>* node = values->start;
+
 
 	int i = 0;
 	while(i < valueId && node != NULL) {
@@ -120,7 +128,7 @@ string* Variable::getValueNames() {
 		node = node->getNext();
 		i++;
 	}
-
+	//destroy valueNames
 	return valueNames;
 }
 #endif

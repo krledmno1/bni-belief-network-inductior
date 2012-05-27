@@ -8,7 +8,7 @@
 #ifndef TREENODE_H_
 #define TREENODE_H_
 
-#include "../Utilities/HashTable/HashTable.h"
+#include <map>
 
 template<class T>
 class TreeNode {
