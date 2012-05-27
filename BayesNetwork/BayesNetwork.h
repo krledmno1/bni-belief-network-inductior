@@ -8,6 +8,8 @@
 #define BAYESNETWORK_H_
 
 
+#include "Utilities/LinkedList/LinkedList.h"
+#include "Data\DataTable.h"
 #include "../BayesNetwork/Variable.h"
 
 class DataTable;
@@ -15,6 +17,8 @@ class DataTable;
 class BayesNetwork {
 private:
 	Variable** vars;
+	DataTable* data; 
+
 
 public:
 	BayesNetwork(int numVars);
@@ -27,8 +31,9 @@ public:
 };
 
 BayesNetwork::BayesNetwork(int numVars) {
-	vars = new Variable*[numVars];
-	char* name;
+	vars = new Variable* [numVars];
+	char* name = "";
+
 	for(int i = 0; i < numVars; i++) {
 		sprintf(name, "%d", i);
 		vars[i] = new Variable(name);

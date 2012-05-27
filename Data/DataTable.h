@@ -8,13 +8,18 @@
 #define DATATABLE__H_
 
 
-#include "../Utilities/LinkedList/LinkedList.h"
-#include "../BayesNetwork/Variable.h"
+#include "..\Utilities\LinkedList\LinkedList.h"
+//#include "../Utilities/LinkedList/LinkedList.h"
+#include "..\BayesNetwork\Variable.h"
+//#include "../BayesNetwork/Variable.h"
+
 #include <time.h>
 #include <iostream>
-using namespace std;
+#include <string>
+#include <fstream>
+#include <sstream>
 
-class BayesNetwork;
+using namespace std;
 
 class DataTable {
 private:
@@ -24,13 +29,13 @@ private:
 	DataTable();
 
 public:
-	static DataTable* getRandomTable(int numCases, int numVars, int maxNumValues, int minNumValues);
-	static DataTable* getRandomTable(int numCases, LinkedList<Variable> variables);
-	static DataTable* getTableFromFile(char* filePath);
-	static DataTable* generateTableFromBN(BayesNetwork* network);
+	DataTable(Variable*** variables, int numCases, int numVars, int maxNumValues, int minNumValues);
+	DataTable(int numCases, int numVars, Variable** variables);
+	DataTable(char* filePath, Variable** variables);
 	int getNumCases();
 	int* getCase(int index);
 	int getNumVars();
+	void saveTableToFile(char* filePath, Variable** variables);
 };
 
 DataTable::DataTable()
@@ -50,59 +55,235 @@ int* DataTable::getCase(int index) {
 	return table[index];
 }
 
-DataTable* DataTable::getRandomTable(int numCases, int numVars, int maxNumValues, int minNumValues = 2) {
+DataTable::DataTable(Variable*** variables, int numCases, int numVars, int maxNumValues, int minNumValues = 2) {
 
+	// Input parameters check
 	if(minNumValues < 2 || minNumValues > maxNumValues || numCases <= 0 || numVars <= 0) {
 		cout << "Incorrect parameters!";
-		return NULL;
+		return;
 	}
-
-	DataTable* dataTable = new DataTable();
-	dataTable->table = new int* [numCases];
-	for(int i = 0; i < numCases; i++) {
-		dataTable->table[i] = new int [numVars];
-	}
-
-	Variable** vars = new Variable*[numVars];
 
 	srand((unsigned int) time(0));
+
+	// Table initialization
+	this->numCases = numCases;
+	this->numVars = numVars;
+	table = new int* [numCases];
+
+	for(int i = 0; i < numCases; i++) {
+		table[i] = new int [numVars];
+	}
+
+
+	// Creates numVars new variables
+	Variable** vars = new Variable* [numVars];	
+	*variables = vars;
+
 	Variable* var;
-	char* varName;
-	int numValues;
+	string varName;
+	int* numValues = new int[numVars];
 	for(int i = 0; i < numVars; i++) {
-		sprintf(varName, "%d", i);
+		stringstream ss;
+		ss << "Var" << i;
+		varName = ss.str(); // The name of the variable is it's number/id
 		var = new Variable(varName);
 
-		numValues = (rand() % (maxNumValues - minNumValues + 1)) + minNumValues;
-		char* valueName;
-		for(int j = 0; j < numValues; j++) {
-			sprintf(valueName, "%d", j);
+		numValues[i] = (rand() % (maxNumValues - minNumValues + 1)) + minNumValues; // The number of values of a variable is element of [minNumValues, maxNumValues]
+		string* valueName; // The name of the value is its id
+		for(int j = 0; j < numValues[i]; j++) { // Adds numValues possible values of the variable
+			
+			stringstream ss;
+			ss << "Value" << j;
+			valueName = new string(ss.str());
+			valueName = valueName;
 			var->addValue(valueName);
 		}
 
 		vars[i] = var;
 	}
 
+	// Fills the table with random values
 	for(int i = 0; i < numCases; i++) {
 		for(int j = 0; j < numVars; j++)
 		{
-			numValues = vars[j]->getNumValues();
-			dataTable->table[i][j] = rand() % numValues;
-
-			cout << dataTable->table[i][j] << " ";
+			table[i][j] = rand() % numValues[j];
+			cout << table[i][j] << " ";
 		}
-
 		cout << "\n";
 	}
-
-	dataTable->numCases = numCases;
-	dataTable->numVars = numVars;
-
-	return dataTable;
 }
 
 
-#include "../BayesNetwork/BayesNetwork.h"
+DataTable::DataTable(int numCases, int numVars, Variable** variables) {
+	
+	if (!(numCases > 0 && numVars > 0)) {
+		cout << "Incorrect parameters!";
+		return;
+	}
 
+	// Table initialization
+	numCases = numCases;
+	numVars = numVars;
+	table = new int* [numCases];
+	for(int i = 0; i < numCases; i++) {
+		table[i] = new int [numVars];
+	}
+
+	// Saves the number of values for each variable
+	int* numValues = new int[numVars];
+	for (int i = 0; i < numVars; i++) {
+		numValues[i] = variables[i]->getNumValues();
+	}
+
+	// Generates random values for each table element
+	for (int i = 0; i < numCases; i++) {
+		for (int j = 0; j < numVars; j++) {
+			table[i][j] = rand() % numValues[j];	 
+		}
+	}
+}
+
+
+DataTable::DataTable(char* filePath, Variable** vars) {
+	if (strlen(filePath) > 0) {
+		cout << "Reading file: " << filePath << "\n";
+
+		int currSepIndex;
+		int oldSepIndex;
+		string line;
+		ifstream file;
+		file.open (filePath);
+
+		// Reading the first line with the names of the variables
+		getline(file, line);
+
+		// Finds the number of variables
+		currSepIndex = -1;
+		int numVars = 0;
+		do {
+			currSepIndex = line.find(",", currSepIndex + 1);
+			numVars++;
+		} while(currSepIndex != string::npos);
+
+		cout << "Found " << numVars << " variables (" << line << ")\n";
+
+		vars = new Variable*[numVars];
+
+		// Reads the names and creates the variables (all but the last one)
+		oldSepIndex = 0;
+		currSepIndex = 0;
+		string* varName;
+		int varIndex = 0;
+		while (currSepIndex != string::npos) {
+			currSepIndex = line.find_first_of(",", oldSepIndex);
+			varName = new string(oldSepIndex, (currSepIndex != string::npos ? currSepIndex : line.size()) - oldSepIndex);
+			oldSepIndex = max(oldSepIndex, currSepIndex + 1);
+
+			vars[varIndex] = new Variable(*varName);
+			varIndex++;
+			cout << varName << "\n";
+		} 
+
+		// Reads the name and creates the last variable
+		/*line.copy(varName, line.size() - oldSepIndex, oldSepIndex);
+		vars[varIndex] = new Variable(varName);*/
+		
+		cout << "---------";
+
+		// Reads the values of the variables
+		LinkedList<int*>* cases = new LinkedList<int*>();
+		int* caseValues;
+		int valueId;
+		int i = 0; // cases index
+		int j = 0; // variable index
+		while(!file.eof()) // For each line
+		{
+			cout << "\nCase " << i + 1 << ": ";
+
+			getline(file, line);
+			
+			j = 0;			
+			oldSepIndex = 0;
+			currSepIndex = 0;
+			caseValues = new int[numVars];
+			while (currSepIndex != string::npos){ // For each value on the line
+
+				// Read the value
+				currSepIndex = line.find_first_of(",", oldSepIndex);
+				string* valueName = new string(line, oldSepIndex, (currSepIndex != string::npos ? currSepIndex : line.size()) - oldSepIndex);
+				oldSepIndex = currSepIndex + 1;
+
+				valueId = vars[j]->addValue(valueName); // Add it to the matching variable
+				caseValues[j] = valueId; // Sets the value of the case
+				j++;
+
+				cout << valueId << "-" << *valueName << "  ";
+			}
+
+			// Adds the case values to the list
+			cases->addToBack(&caseValues);
+
+			i++;
+
+			cout << "\n";
+		}
+	
+		file.close();
+
+		this->numVars = numVars;
+		this->numCases = cases->getSize();
+		table = new int*[numCases];
+		Node<int*>* node = cases->start;
+		for(int i = 0; i < numCases; i++) {
+			table[i] = *(node->getContent());
+			node = node->getNext();
+		}
+
+		cout << "---------";
+		cout << "Total: " << numCases << " cases read";
+		cin.get();
+	}
+}
+
+void DataTable::saveTableToFile(char* filePath, Variable** variables) {
+	if (strlen(filePath) > 0) {
+		cout << "\nWriting to file: " << filePath << "\n";
+
+
+		string* varNames = new string [numVars];
+		string** valueNames = new string* [numVars];
+		for(int i = 0; i < numVars; i++) {
+			varNames[i] = variables[i]->name;
+			valueNames[i] = variables[i]->getValueNames();
+		}
+
+		ofstream file;
+		file.open (filePath);
+
+		string firstLine = "";
+		for(int i = 0; i < numVars; i++) {
+			firstLine.append(varNames[i].data()).append(",");
+		}
+		firstLine.erase(firstLine.size() - 1, 1);
+
+		file << firstLine << "\n";
+
+		string* line;
+		for(int i = 0 ; i < numCases; i++) {
+			line = new string();
+			for(int j = 0; j < numVars; j++) {
+				line->append(valueNames[j][table[i][j]].data()).append(",");
+			}
+			line->erase(line->size() - 1, 1);
+
+			file << *line << "\n";
+		}
+
+		file.close();
+
+		cout << "\nWrite completed";
+	}
+}
 
 #endif
+
