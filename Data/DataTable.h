@@ -4,12 +4,17 @@
  * Created on: May 21, 2012
  *      Author: Denis
  */
+#ifndef DATATABLE__H_
+#define DATATABLE__H_
 
-#include "Utilities/LinkedList/LinkedList.h"
-#include "BayesNetwork/Variable.h"
-#include "BayesNetwork/BayesNetwork.h"
+
+#include "../Utilities/LinkedList/LinkedList.h"
+#include "../BayesNetwork/Variable.h"
 #include <time.h>
-#include <iostream.h>
+#include <iostream>
+using namespace std;
+
+class BayesNetwork;
 
 class DataTable {
 private:
@@ -27,6 +32,11 @@ public:
 	int* getCase(int index);
 	int getNumVars();
 };
+
+DataTable::DataTable()
+{
+
+}
 
 int DataTable::getNumCases() {
 	return numCases;
@@ -47,13 +57,13 @@ DataTable* DataTable::getRandomTable(int numCases, int numVars, int maxNumValues
 		return NULL;
 	}
 
-	DataTable dataTable = new DataTable::DataTable();
-	dataTable.table = new int* [numCases];
+	DataTable* dataTable = new DataTable();
+	dataTable->table = new int* [numCases];
 	for(int i = 0; i < numCases; i++) {
-		dataTable.table[i] = new int [numVars];
+		dataTable->table[i] = new int [numVars];
 	}
 
-	Variable* vars[] = new Variable* [numVars];
+	Variable** vars = new Variable*[numVars];
 
 	srand((unsigned int) time(0));
 	Variable* var;
@@ -77,16 +87,22 @@ DataTable* DataTable::getRandomTable(int numCases, int numVars, int maxNumValues
 		for(int j = 0; j < numVars; j++)
 		{
 			numValues = vars[j]->getNumValues();
-			dataTable.table[i][j] = rand() % numValues;
+			dataTable->table[i][j] = rand() % numValues;
 
-			cout << dataTable.table[i][j] << " ";
+			cout << dataTable->table[i][j] << " ";
 		}
 
 		cout << "\n";
 	}
 
-	dataTable.numCases = numCases;
-	dataTable.numVars = numVars;
+	dataTable->numCases = numCases;
+	dataTable->numVars = numVars;
 
-	return &dataTable;
+	return dataTable;
 }
+
+
+#include "../BayesNetwork/BayesNetwork.h"
+
+
+#endif
