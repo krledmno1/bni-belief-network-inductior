@@ -7,93 +7,121 @@
 #ifndef VARIABLE_H_
 #define VARIABLE_H_
 
-#include "../Utilities/LinkedList/LinkedList.h"
-#include <stdlib.h>
-#include "CPT.h"
+#include "Utilities\LinkedList\LinkedList.h"
+//#include "CPT.h"
+#include <string>
+#include <iostream>
 
+
+using namespace std;
 
 
 class Variable {
 private:
-	static int var_counter;
-	LinkedList<Variable> parents;
-	LinkedList<Variable> children;
-	LinkedList<char*> values;
-	CPT* cpt;
+	static int varCounter;
+	LinkedList<Variable>* parents;
+	LinkedList<Variable>* children;
+	LinkedList<string>* values;
+	//CPT* cpt;
 	//int sampled_value;
 
 public:
 	int id;
-	char* name;
-	Variable();
-	Variable(char* name);
+	string name;
+	Variable(string name);
+
 	~Variable();
 	void addParent(Variable* parent);
 	void addChild(Variable* child);
 	int getNumValues();
-	void addValue(char* value);
-	char* getValueName(int valueId);
-
+	int addValue(string* value);
+	string* getValueName(int valueId);
+	string* getValueNames();
+	const static int MAX_VAR_NAME_LENGTH = 10;
+	const static int MAX_VAR_VALUE_LENGTH = 10;
 };
 
-int Variable::var_counter = 0;
+int Variable::varCounter = 0;
 
-Variable::Variable()
-{
 
-}
-
-Variable::Variable(char* name) {
-	this->id = var_counter;
-	var_counter++;
+Variable::Variable(string name) {
+	id = varCounter;
+	varCounter++;
 
 	this->name = name;
-	this->cpt = new CPT();
-
+	this->parents = new LinkedList<Variable>();
+	this->children = new LinkedList<Variable>();
+	this->values = new LinkedList<string>();
 }
 
 Variable::~Variable() {
-	parents.removeAll();
-	children.removeAll();
-	delete cpt;
-	delete [] name;
-
+	delete parents;
+	delete children;
+	/*delete cpt;
+	delete [] name;*/
 
 }
 
 void Variable::addParent(Variable* parent) {
-	this->parents.addToBack(parent);
+	this->parents->addToBack(parent);
 	parent->addChild(this);
 }
 
 void Variable::addChild(Variable* child) {
-	this->children.addToBack(child);
+	this->children->addToBack(child);
 }
 
 int Variable::getNumValues() {
-	return values.getSize();
+	return values->getSize();
 }
 
-void Variable::addValue(char* value) {
-	values.addToBack(&value);
-}
+int Variable::addValue(string* value) {
+	Node<string>* node = values->start;
 
-char* Variable::getValueName(int valueId) {
-	Node<char*>* node = values.start;
-
-		int i = 0;
-		while(i < valueId && node != NULL) {
-			node = node->getNext();
+	int i = 0;
+	string* nodeContent;
+	while(node != NULL) {
+		nodeContent = node->getContent();
+		if(nodeContent->compare(*value) == 0) {
+			return i;
 		}
+		i++;
+		node = node->getNext();
+	}
 
-		if(node != NULL) {
-			return *(node->getContent());
-		}
+	values->addToBack(value);
+	return i;
+}
 
-		return NULL;
+string* Variable::getValueName(int valueId) {
+	Node<string>* node = values->start;
+
+	int i = 0;
+	while(i < valueId && node != NULL) {
+		node = node->getNext();
+	}
+
+	if(node != NULL) {
+		return node->getContent();
+	}
+
+	return NULL;
 
 }
 
+string* Variable::getValueNames() {
+	int numValues = values->getSize();
+	string* valueNames = new string [numValues];
 
+	Node<string>* node = values->start;
+	int i = 0;
+	while (node != NULL) {
+		valueNames[i] = *(node->getContent());
+		node = node->getNext();
+		i++;
+	}
 
+	return valueNames;
+}
 #endif
+
