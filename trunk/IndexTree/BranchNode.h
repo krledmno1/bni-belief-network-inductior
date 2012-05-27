@@ -11,16 +11,25 @@
 #include "TreeNode.h"
 #include "../Utilities/HashTable/HashTable.h"
 
+
+
 template<class T>
 class BranchNode: public TreeNode<T> {
 public:
 	BranchNode();
+	BranchNode(int size);
+
 	virtual ~BranchNode();
 
-private:
-	HashTable<int,TreeNode<T> > branchingNodes;
+	TreeNode<T>* branchingNodes;
 
 };
+
+template<class T>
+BranchNode<T>::BranchNode(int size)
+{
+	branchingNodes = new TreeNode<T>[size];
+}
 
 
 template<class T>
@@ -31,6 +40,8 @@ BranchNode<T>::BranchNode() {
 template<class T>
 BranchNode<T>::~BranchNode() {
 		// TODO Auto-generated destructor stub
+	if(branchingNodes!=NULL)
+		delete [] branchingNodes;
 }
 
 

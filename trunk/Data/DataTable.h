@@ -8,16 +8,17 @@
 #define DATATABLE__H_
 
 
-#include "..\Utilities\LinkedList\LinkedList.h"
-//#include "../Utilities/LinkedList/LinkedList.h"
-#include "..\BayesNetwork\Variable.h"
-//#include "../BayesNetwork/Variable.h"
+//#include "..\Utilities\LinkedList\LinkedList.h"
+#include "../Utilities/LinkedList/LinkedList.h"
+//#include "..\BayesNetwork\Variable.h"
+#include "../BayesNetwork/Variable.h"
 
 #include <time.h>
 #include <iostream>
-#include <string>
+#include <string.h>
 #include <fstream>
 #include <sstream>
+
 
 using namespace std;
 
@@ -26,22 +27,27 @@ private:
 	int** table;
 	int numCases;
 	int numVars;
+	Variable** variables;
 	DataTable();
 
+
 public:
-	DataTable(Variable*** variables, int numCases, int numVars, int maxNumValues, int minNumValues);
+	DataTable(int numCases, int numVars, int maxNumValues, int minNumValues);
 	DataTable(int numCases, int numVars, Variable** variables);
-	DataTable(char* filePath, Variable** variables);
+	DataTable(char* filePath);
 	int getNumCases();
 	int* getCase(int index);
 	int getNumVars();
-	void saveTableToFile(char* filePath, Variable** variables);
+	void saveTableToFile(char* filePath);
+	Variable** getVariables();
 };
 
 DataTable::DataTable()
 {
 
 }
+
+
 
 int DataTable::getNumCases() {
 	return numCases;
@@ -55,7 +61,7 @@ int* DataTable::getCase(int index) {
 	return table[index];
 }
 
-DataTable::DataTable(Variable*** variables, int numCases, int numVars, int maxNumValues, int minNumValues = 2) {
+DataTable::DataTable(int numCases, int numVars, int maxNumValues, int minNumValues = 2) {
 
 	// Input parameters check
 	if(minNumValues < 2 || minNumValues > maxNumValues || numCases <= 0 || numVars <= 0) {
@@ -76,17 +82,15 @@ DataTable::DataTable(Variable*** variables, int numCases, int numVars, int maxNu
 
 
 	// Creates numVars new variables
-	Variable** vars = new Variable* [numVars];	
-	*variables = vars;
+	variables = new Variable*[numVars];
 
-	Variable* var;
-	string varName;
+	string* varName;
 	int* numValues = new int[numVars];
 	for(int i = 0; i < numVars; i++) {
 		stringstream ss;
 		ss << "Var" << i;
-		varName = ss.str(); // The name of the variable is it's number/id
-		var = new Variable(varName);
+		varName = new string(ss.str()); // The name of the variable is it's number/id
+		variables[i] = new Variable(varName);
 
 		numValues[i] = (rand() % (maxNumValues - minNumValues + 1)) + minNumValues; // The number of values of a variable is element of [minNumValues, maxNumValues]
 		string* valueName; // The name of the value is its id
@@ -95,11 +99,10 @@ DataTable::DataTable(Variable*** variables, int numCases, int numVars, int maxNu
 			stringstream ss;
 			ss << "Value" << j;
 			valueName = new string(ss.str());
-			valueName = valueName;
-			var->addValue(valueName);
+			variables[i]->addValue(valueName);
 		}
 
-		vars[i] = var;
+
 	}
 
 	// Fills the table with random values
@@ -122,8 +125,8 @@ DataTable::DataTable(int numCases, int numVars, Variable** variables) {
 	}
 
 	// Table initialization
-	numCases = numCases;
-	numVars = numVars;
+	this->numCases = numCases;
+	this->numVars = numVars;
 	table = new int* [numCases];
 	for(int i = 0; i < numCases; i++) {
 		table[i] = new int [numVars];
@@ -144,7 +147,7 @@ DataTable::DataTable(int numCases, int numVars, Variable** variables) {
 }
 
 
-DataTable::DataTable(char* filePath, Variable** vars) {
+DataTable::DataTable(char* filePath) {
 	if (strlen(filePath) > 0) {
 		cout << "Reading file: " << filePath << "\n";
 
@@ -167,7 +170,7 @@ DataTable::DataTable(char* filePath, Variable** vars) {
 
 		cout << "Found " << numVars << " variables (" << line << ")\n";
 
-		vars = new Variable*[numVars];
+		variables = new Variable*[numVars];
 
 		// Reads the names and creates the variables (all but the last one)
 		oldSepIndex = 0;
@@ -179,7 +182,7 @@ DataTable::DataTable(char* filePath, Variable** vars) {
 			varName = new string(oldSepIndex, (currSepIndex != string::npos ? currSepIndex : line.size()) - oldSepIndex);
 			oldSepIndex = max(oldSepIndex, currSepIndex + 1);
 
-			vars[varIndex] = new Variable(*varName);
+			variables[varIndex] = new Variable(varName);
 			varIndex++;
 			cout << varName << "\n";
 		} 
@@ -192,7 +195,7 @@ DataTable::DataTable(char* filePath, Variable** vars) {
 
 		// Reads the values of the variables
 		LinkedList<int*>* cases = new LinkedList<int*>();
-		int* caseValues;
+		int** caseValues;
 		int valueId;
 		int i = 0; // cases index
 		int j = 0; // variable index
@@ -205,7 +208,8 @@ DataTable::DataTable(char* filePath, Variable** vars) {
 			j = 0;			
 			oldSepIndex = 0;
 			currSepIndex = 0;
-			caseValues = new int[numVars];
+			caseValues = new int*[1];
+			*(caseValues) = new int[numVars];
 			while (currSepIndex != string::npos){ // For each value on the line
 
 				// Read the value
@@ -213,15 +217,15 @@ DataTable::DataTable(char* filePath, Variable** vars) {
 				string* valueName = new string(line, oldSepIndex, (currSepIndex != string::npos ? currSepIndex : line.size()) - oldSepIndex);
 				oldSepIndex = currSepIndex + 1;
 
-				valueId = vars[j]->addValue(valueName); // Add it to the matching variable
-				caseValues[j] = valueId; // Sets the value of the case
+				valueId = variables[j]->addValue(valueName); // Add it to the matching variable
+				*(caseValues)[j] = valueId; // Sets the value of the case
 				j++;
 
 				cout << valueId << "-" << *valueName << "  ";
 			}
 
 			// Adds the case values to the list
-			cases->addToBack(&caseValues);
+			cases->addToBack(caseValues);
 
 			i++;
 
@@ -238,6 +242,7 @@ DataTable::DataTable(char* filePath, Variable** vars) {
 			table[i] = *(node->getContent());
 			node = node->getNext();
 		}
+		delete cases;
 
 		cout << "---------";
 		cout << "Total: " << numCases << " cases read";
@@ -245,12 +250,12 @@ DataTable::DataTable(char* filePath, Variable** vars) {
 	}
 }
 
-void DataTable::saveTableToFile(char* filePath, Variable** variables) {
+void DataTable::saveTableToFile(char* filePath) {
 	if (strlen(filePath) > 0) {
 		cout << "\nWriting to file: " << filePath << "\n";
 
 
-		string* varNames = new string [numVars];
+		string** varNames = new string* [numVars];
 		string** valueNames = new string* [numVars];
 		for(int i = 0; i < numVars; i++) {
 			varNames[i] = variables[i]->name;
@@ -262,7 +267,7 @@ void DataTable::saveTableToFile(char* filePath, Variable** variables) {
 
 		string firstLine = "";
 		for(int i = 0; i < numVars; i++) {
-			firstLine.append(varNames[i].data()).append(",");
+			firstLine.append(varNames[i]->data()).append(",");
 		}
 		firstLine.erase(firstLine.size() - 1, 1);
 
@@ -283,6 +288,11 @@ void DataTable::saveTableToFile(char* filePath, Variable** variables) {
 
 		cout << "\nWrite completed";
 	}
+}
+
+Variable** DataTable::getVariables()
+{
+	return variables;
 }
 
 #endif
