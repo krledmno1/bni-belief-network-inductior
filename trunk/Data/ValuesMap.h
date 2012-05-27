@@ -4,10 +4,11 @@
  * Created on: May 21, 2012
  *      Author: Denis
  */
+#include <stdlib.h>
 
 class ValuesMap {
 private:
-	static LinkedList<char*> table[];
+	static LinkedList<char> table[];
 	static int numVars;
 	static ValuesMap instance;
 	ValuesMap(int numVars);
@@ -22,7 +23,7 @@ public:
 
 };
 
-ValuesMap::setNumVars(int numVars) {
+void ValuesMap::setNumVars(int numVars) {
 	ValuesMap::numVars = numVars;
 }
 
@@ -31,10 +32,10 @@ ValuesMap* ValuesMap::get() {
 }
 
 ValuesMap::ValuesMap() {
-	this.table = new LinkedList<char*>[numVars];
+	this->table = new LinkedList<char>[numVars];
 
 	for(int i = 0; i < numVars; i++) {
-		table[i] = new LinkedList<char*>();
+		table[i] = new LinkedList<char>();
 	}
 }
 

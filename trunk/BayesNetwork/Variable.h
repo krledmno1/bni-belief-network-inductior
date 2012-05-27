@@ -9,8 +9,9 @@
 
 #include "../Utilities/LinkedList/LinkedList.h"
 #include <stdlib.h>
+#include "CPT.h"
 
-class CPT;
+
 
 class Variable {
 private:
@@ -24,6 +25,7 @@ private:
 public:
 	int id;
 	char* name;
+	Variable();
 	Variable(char* name);
 	~Variable();
 	void addParent(Variable* parent);
@@ -35,6 +37,11 @@ public:
 };
 
 int Variable::var_counter = 0;
+
+Variable::Variable()
+{
+
+}
 
 Variable::Variable(char* name) {
 	this->id = var_counter;
@@ -87,7 +94,6 @@ char* Variable::getValueName(int valueId) {
 
 }
 
-#include "CPT.h"
 
 
 #endif
