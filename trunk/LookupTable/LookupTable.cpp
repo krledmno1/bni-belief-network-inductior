@@ -15,8 +15,10 @@ LookupTable::LookupTable() {
 LookupTable::LookupTable(int size) {
 	//size should be m+r, since the table starts from 0 and goes to m+r-1
 
-
+	//create the array
 	this->lookuptable = new double[size];
+
+	//compute values
 	double temp = 1;
 	for(int i = 0; i<size; i++)
 	{
@@ -28,6 +30,7 @@ LookupTable::LookupTable(int size) {
 
 double LookupTable::lookup(int index)
 {
+	//queries the table. if out of bounds returns 0;
 	if(index<size)
 		return this->lookuptable[index];
 	else
@@ -37,6 +40,7 @@ double LookupTable::lookup(int index)
 
 LookupTable::~LookupTable() {
 
+	//deletes the array
 	delete [] lookuptable;
 }
 

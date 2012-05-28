@@ -16,8 +16,8 @@ public:
 	virtual ~LookupTable();
 
 private:
-	int size;
-	double* lookuptable;
+	int size;				//size should be m+r
+	double* lookuptable;	//the dynamic array of precomputed values log(i!) for i = 0..m+r-1
 
 };
 

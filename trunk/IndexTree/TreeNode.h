@@ -9,13 +9,17 @@
 #define TREENODE_H_
 
 #include <map>
+#include <iostream>
 #include "../BayesNetwork/Variable.h"
+
+using namespace std;
 
 template<class T>
 class TreeNode {
 public:
 	TreeNode();
 	TreeNode(Variable* var);
+	virtual void print();
 
 	virtual ~TreeNode();
 

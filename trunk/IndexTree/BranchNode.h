@@ -17,8 +17,8 @@ template<class T>
 class BranchNode: public TreeNode<T> {
 public:
 	BranchNode();
-	BranchNode(int size);
 	BranchNode(Variable* correspondant);
+	void print();
 
 	virtual ~BranchNode();
 
@@ -28,31 +28,42 @@ public:
 };
 
 template<class T>
-BranchNode<T>::BranchNode(int size)
+void BranchNode<T>::print()
 {
-	branchingNodes = new TreeNode<T>[size];
+	//prints node for debugging purposes
+	cout << "Branch node for variable " << this->var->name;
+	cout << "\n     Children:";
+	for(int i = 0; i<this->var->getNumValues();i++)
+	{
+		cout << "\n               value:" << this->var->getValueName(i) << "  child: " << branchingNodes[i]->print();
+	}
+
+
 }
+
 
 template<class T>
 BranchNode<T>::BranchNode(Variable* corr)
 {
+	//initializes the var reference and array of pointers
 	this->TreeNode(corr);
 	branchingNodes = new TreeNode<T>[corr->getNumValues()];
 }
 
 template<class T>
 BranchNode<T>::BranchNode() {
-		// TODO Auto-generated constructor stub
-
+//unused constructor
 }
 template<class T>
 BranchNode<T>::~BranchNode() {
-		// TODO Auto-generated destructor stub
+
+	//destroys the node, array of pointers and calls destructors of all child nodes
 	if(branchingNodes!=NULL)
 	{
 		for(int i= 0;i<this->var->getNumValues(); i++)
 		{
-			delete branchingNodes[i];
+			if(branchingNodes[i]!=NULL)
+				delete branchingNodes[i];
 		}
 		delete [] branchingNodes;
 	}
