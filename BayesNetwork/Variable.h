@@ -36,6 +36,8 @@ public:
 	void addChild(Variable* child);
 	int getNumValues();
 	int addValue(string* value);
+	void print();
+	void printChildren();
 	string* getValueName(int valueId);
 	string* getValueNames();
 	const static int MAX_VAR_NAME_LENGTH = 10;
@@ -53,6 +55,19 @@ Variable::Variable(string* name) {
 	this->parents = new LinkedList<Variable>();
 	this->children = new LinkedList<Variable>();
 	this->values = new LinkedList<string>();
+}
+
+void Variable::print()
+{
+	cout << "Variable "  << id;
+}
+void Variable::printChildren()
+{
+	for(Node<Variable>* node = children->start; node!=NULL;node = node->getNext())
+	{
+		cout << "\n  -- >";
+		node->getContent()->print();
+	}
 }
 
 Variable::~Variable() {

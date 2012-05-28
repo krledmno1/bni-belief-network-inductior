@@ -28,6 +28,7 @@ public:
 	double learnStructure();
 	void createProbTables();
 	DataTable generateData();
+	void print();
 
 };
 
@@ -37,7 +38,27 @@ BayesNetwork::BayesNetwork(DataTable* data) {
 	numVars = data->getNumVars();
 }
 
+void BayesNetwork::print()
+{
+	cout << "\nPrinting Bayes network:";
+	for(int i = 0; i<numVars;i++)
+	{
+		vars[i]->print();
+		vars[i]->printChildren();
+	}
+}
 
+BayesNetwork::~BayesNetwork() {
+
+	//if we need to destroy datatable
+	//if(data!=NULL)
+	//	delete data;
+
+	for(int i =0;i<numVars;i++)
+		delete vars[i];
+	delete [] vars;
+
+}
 
 #include "../Data/DataTable.h"
 
