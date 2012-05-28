@@ -8,11 +8,11 @@
 #ifndef INDEXTREE_H_
 #define INDEXTREE_H_
 
+
 #include "../Utilities/LinkedList/LinkedList.h"
 #include "../IndexTree/BranchNode.h"
 #include "LeafNode.h"
 #include "../Data/DataTable.h"
-
 
 
 template<class T>
@@ -25,9 +25,8 @@ public:
 	T* getProbabilities(int* parentValues);				//returns probabilities for corrVar from CPT
 	LinkedList<LeafNode<T> >* getNijks();				//returns linkedlist of Nijk-s
 	void print();
-
+	Variable* target;									//corresponding variable
 private:
-	Variable* target;							//corresponding variable
 	TreeNode<T>* root;							//root of the tree
 	LinkedList<LeafNode<T> > leaves;			//linked list of the leaves of the tree
 	void constructTree(DataTable* table);		//used by 3rd constructor
@@ -71,10 +70,10 @@ T* IndexTree<T>:: getProbabilities(int* parentValues)
 {
 	//we start from the root
 	//set n (current node in traversal) to root
-	TreeNode<T> n = root;
+	TreeNode<T>* n = root;
 
 	//we consider all the parents of the node
-	for(int i = 0 ; i<target->parents->getSize();i++)
+	for(int i = 0 ; i<this->target->parents->getSize();i++)
 	{
 		//we traverse from one branch node to the next by taking appropritate paths
 		//depending on the values supplied in the parentValues
@@ -98,7 +97,7 @@ void IndexTree<T>::constructTree()
 
 			//now for each value of that parent create a node (either branchin' if node->getNext != NULL or leaf otherwise)
 			for(int i = 0; i<node->getContent()->getNumValues();i++)
-				constructNode(root,node->getNext(),i);
+				constructNode((BranchNode<T>*)root,node->getNext(),i);
 
 
 	}
@@ -126,7 +125,7 @@ void IndexTree<T>::constructNode(BranchNode<T>* node,Node<Variable>* parent, int
 	{
 		//if there are more parents then construct branchin' node
 		for(int i = 0; i<parent->getContent()->getNumValues();i++)
-				constructNode(node->branchingNodes[value],parent->getNext(),i);
+				constructNode((BranchNode<T>*)node->branchingNodes[value],parent->getNext(),i);
 	}
 	else
 	{
@@ -221,5 +220,7 @@ IndexTree<T>::~IndexTree() {
 	//calls destructior of the branch or leaf node (TreeNode constructor is virtual)
 	delete root;
 }
+
+
 
 #endif /* INDEXTREE_H_ */

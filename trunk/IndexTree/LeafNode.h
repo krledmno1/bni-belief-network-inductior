@@ -44,9 +44,9 @@ void LeafNode<T>::print()
 
 template<class T>
 LeafNode<T>::LeafNode(Variable* var)
+:TreeNode<T>(var)
 {
 	//initializes reference to corresponding var and the array of values
-	this->TreeNode(var);
 	Nijk = new T[var->getNumValues()];
 	for(int i = 0; i<var->getNumValues(); i++)
 	{

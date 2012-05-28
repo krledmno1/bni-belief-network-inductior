@@ -45,4 +45,9 @@ TreeNode<T>::~TreeNode() {
 }
 
 
+template<class T>
+void TreeNode<T>::print()
+{
+
+}
 #endif /* TREENODE_H_ */

@@ -18,7 +18,7 @@ using namespace std;
 
 
 class Variable {
-private:
+public:
 	static int varCounter;
 	LinkedList<Variable>* parents;
 	LinkedList<Variable>* children;
@@ -26,7 +26,7 @@ private:
 	//CPT* cpt;
 	//int sampled_value;
 
-public:
+
 	int id;
 	string* name;
 	Variable(string* name);

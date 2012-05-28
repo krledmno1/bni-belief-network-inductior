@@ -7,12 +7,12 @@
 #include "IndexTree/BranchNode.h"
 #include "IndexTree/LeafNode.h"
 #include "IndexTree/TreeNode.h"
-
+#include "BayesNetwork/CPT.h"
 
 
 int main(int argc, char* argv[])
 {
-
+	CPT a;
 	return 0;
 }
 

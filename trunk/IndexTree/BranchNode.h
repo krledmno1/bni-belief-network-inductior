@@ -22,7 +22,7 @@ public:
 
 	virtual ~BranchNode();
 
-	TreeNode<T>* branchingNodes;
+	TreeNode<T>** branchingNodes;
 
 
 };
@@ -35,7 +35,8 @@ void BranchNode<T>::print()
 	cout << "\n     Children:";
 	for(int i = 0; i<this->var->getNumValues();i++)
 	{
-		cout << "\n               value:" << this->var->getValueName(i) << "  child: " << branchingNodes[i]->print();
+		cout << "\n               value:" << this->var->getValueName(i) << "  child: ";
+		branchingNodes[i]->print();
 	}
 
 
@@ -44,10 +45,10 @@ void BranchNode<T>::print()
 
 template<class T>
 BranchNode<T>::BranchNode(Variable* corr)
+:TreeNode<T>(corr)
 {
 	//initializes the var reference and array of pointers
-	this->TreeNode(corr);
-	branchingNodes = new TreeNode<T>[corr->getNumValues()];
+	branchingNodes = new TreeNode<T>*[corr->getNumValues()];
 }
 
 template<class T>
