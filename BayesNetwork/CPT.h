@@ -15,7 +15,7 @@ class Variable;
 class CPT {
 private:
 
-	Variable* var;
+
 	IndexTree<double> cpt;
 
 public:
@@ -23,10 +23,8 @@ public:
 	CPT();
 	~CPT();
 	void setProb(int* parent_values, float value);
-	float getProb(int* parent_values);
+	double* getProb(int* parent_values);
 	int generateValue(int* parent_values);
-private:
-	void generateTable();
 
 };
 
@@ -38,14 +36,24 @@ CPT::CPT()
 
 CPT::CPT(Variable* var)
 {
-	this->var = var;
-	generateTable();
+	cpt.var = var;
+	cpt.generateTree();
 }
 
-void CPT::generateTable()
+void CPT::setProb(int* parent_values, double value)
 {
-	//TODO: iskopirati iz index tree...
+	//TODO
 }
+double* CPT::getProb(int* parent_values)
+{
+	return cpt.getProbabilities(parent_values);
+}
+
+int CPT::generateValue(int* parent_values)
+{
+	//TODO
+}
+
 
 
 CPT::~CPT()

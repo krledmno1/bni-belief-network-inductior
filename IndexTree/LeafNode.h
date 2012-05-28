@@ -15,28 +15,37 @@ template<class T>
 class LeafNode : public TreeNode<T> {
 public:
 	LeafNode();
-	LeafNode(int size);
 	LeafNode(Variable* var);
+	void print();
+
 	virtual ~LeafNode();
 
-	T* Nijk;
-	int Nij; //aggregated Nijk over k
+	T* Nijk;	//counters in case of index tree and probabilities in case of CPTs
+	int Nij;	//aggregated Nijk over k
 
 };
 
 template<class T>
-LeafNode<T>::LeafNode(int size)
+void LeafNode<T>::print()
 {
-	Nijk = new T[size];
-	for(int i = 0; i<size; i++)
+	//prints the node for debugging purposes
+	cout << "Leaf node for variable " << this->var->name;
+	cout << "\n     Counts: ";
+	for(int i = 0; i<this->var->getNumValues();i++)
 	{
-		Nijk[i] = 0;
+		cout << "\n               value:" << this->var->getValueName(i) << "  count: " << Nijk[i];
 	}
+	cout << "\n     Total: " << Nij;
 }
+
+
+
+
 
 template<class T>
 LeafNode<T>::LeafNode(Variable* var)
 {
+	//initializes reference to corresponding var and the array of values
 	this->TreeNode(var);
 	Nijk = new T[var->getNumValues()];
 	for(int i = 0; i<var->getNumValues(); i++)
@@ -47,7 +56,7 @@ LeafNode<T>::LeafNode(Variable* var)
 
 template<class T>
 LeafNode<T>::LeafNode() {
-
+	//unused constructor
 }
 
 

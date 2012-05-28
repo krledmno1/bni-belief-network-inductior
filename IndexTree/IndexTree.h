@@ -24,6 +24,7 @@ public:
 	virtual ~IndexTree();
 	T* getProbabilities(int* parentValues);				//returns probabilities for corrVar from CPT
 	LinkedList<LeafNode<T> >* getNijks();				//returns linkedlist of Nijk-s
+	void print();
 
 private:
 	Variable* target;							//corresponding variable
@@ -55,6 +56,16 @@ IndexTree<T>::IndexTree(DataTable* table, Variable* target)
 	this->target = target;
 	constructTree(table);
 }
+
+template<class T>
+void IndexTree<T>::print()
+{
+	cout << "\nPrinting index tree for " << target->name << ":\n";
+	if(root!=NULL)
+		root->print();
+}
+
+
 template<class T>
 T* IndexTree<T>:: getProbabilities(int* parentValues)
 {
