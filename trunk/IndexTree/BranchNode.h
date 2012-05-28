@@ -18,10 +18,12 @@ class BranchNode: public TreeNode<T> {
 public:
 	BranchNode();
 	BranchNode(int size);
+	BranchNode(Variable* correspondant);
 
 	virtual ~BranchNode();
 
 	TreeNode<T>* branchingNodes;
+
 
 };
 
@@ -31,6 +33,12 @@ BranchNode<T>::BranchNode(int size)
 	branchingNodes = new TreeNode<T>[size];
 }
 
+template<class T>
+BranchNode<T>::BranchNode(Variable* corr)
+{
+	this->TreeNode(corr);
+	branchingNodes = new TreeNode<T>[corr->getNumValues()];
+}
 
 template<class T>
 BranchNode<T>::BranchNode() {
@@ -41,7 +49,13 @@ template<class T>
 BranchNode<T>::~BranchNode() {
 		// TODO Auto-generated destructor stub
 	if(branchingNodes!=NULL)
+	{
+		for(int i= 0;i<this->var->getNumValues(); i++)
+		{
+			delete branchingNodes[i];
+		}
 		delete [] branchingNodes;
+	}
 }
 
 

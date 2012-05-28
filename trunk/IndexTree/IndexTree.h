@@ -9,7 +9,7 @@
 #define INDEXTREE_H_
 
 #include "../Utilities/LinkedList/LinkedList.h"
-#include "BranchNode.h"
+#include "../IndexTree/BranchNode.h"
 #include "LeafNode.h"
 #include "../Data/DataTable.h"
 
@@ -18,91 +18,197 @@
 template<class T>
 class IndexTree {
 public:
-	IndexTree();
-	IndexTree(DataTable* table, Variable* target);
+	IndexTree();										//not used
+	IndexTree(Variable* target);						//this should be used by CPT and T=double
+	IndexTree(DataTable* table, Variable* target);		//this should be used for conputing Nijk with T=int
 	virtual ~IndexTree();
-	T* getProbability(int* parentValues, Variable* var);
-	LinkedList<LeafNode<T> >* getNijks();
+	T* getProbabilities(int* parentValues);				//returns probabilities for corrVar from CPT
+	LinkedList<LeafNode<T> >* getNijks();				//returns linkedlist of Nijk-s
 
 private:
-	TreeNode<T>* root;
-	LinkedList<LeafNode<T> > leaves;
-	void constructTree(DataTable* table, Variable* target);
+	Variable* target;							//corresponding variable
+	TreeNode<T>* root;							//root of the tree
+	LinkedList<LeafNode<T> > leaves;			//linked list of the leaves of the tree
+	void constructTree(DataTable* table);		//used by 3rd constructor
+	void constructTree();						//used by 2nd constructor
+	void constructNode(BranchNode<T>* n,Node<Variable>* parent, int value);		//used by constructTree()
+
 
 };
 
 template<class T>
 IndexTree<T>::IndexTree() {
-	// TODO Auto-generated constructor stub
+
+
+}
+
+template<class T>
+IndexTree<T>::IndexTree(Variable* target) {
+	this->target = target;
+	constructTree();
 
 }
 
 template<class T>
 IndexTree<T>::IndexTree(DataTable* table, Variable* target)
 {
-	constructTree(table, target);
+	this->target = target;
+	constructTree(table);
 }
 template<class T>
-T* IndexTree<T>:: getProbability(int* parentValues, Variable* var)
+T* IndexTree<T>:: getProbabilities(int* parentValues)
 {
-	TreeNode<double> n = root;
-	for(int i = 0 ; i<var->parents->getSize();i++)
+	//we start from the root
+	//set n (current node in traversal) to root
+	TreeNode<T> n = root;
+
+	//we consider all the parents of the node
+	for(int i = 0 ; i<target->parents->getSize();i++)
 	{
-		n = ((BranchNode<double>*)n)->branchingNodes[parentValues[i]];
+		//we traverse from one branch node to the next by taking appropritate paths
+		//depending on the values supplied in the parentValues
+		n = ((BranchNode<T>*)n)->branchingNodes[parentValues[i]];
 	}
-	return ((LeafNode<double>*)n)->Nijk;
+
+	//when we exploit all the parents (the depth of the tree should be the same as the number of parents)
+	//we reach the leaf node, and return the whole array of probabilities that the variable can take for each of its value
+	return ((LeafNode<T>*)n)->Nijk;
 }
 
-
 template<class T>
-void IndexTree<T>::constructTree(DataTable* table, Variable* target)
+void IndexTree<T>::constructTree()
 {
-
-	if(root==NULL&&target->parents->getSize()>0)
+	//see whether there are parents
+	Node<Variable>* node = target->parents->start;
+	if(node!=NULL)
 	{
-		root = new BranchNode<int>(target->parents->start->getContent()->getNumValues());
+		//if there is at least one - create branching node
+		root = new BranchNode<T>(node->getContent());
+
+			//now for each value of that parent create a node (either branchin' if node->getNext != NULL or leaf otherwise)
+			for(int i = 0; i<node->getContent()->getNumValues();i++)
+				constructNode(root,node->getNext(),i);
+
+
+	}
+	else
+	{
+		//there are no parents of target node, create leaf node immediately
+		root = new LeafNode<T>(target);
+		//fill in the probabilities now
+		//for(int i = 0; i < target->getNumValues();i++)
+		//{
+		//	root->Nijk = something
+		//}
 	}
 
+
+}
+
+template<class T>
+void IndexTree<T>::constructNode(BranchNode<T>* node,Node<Variable>* parent, int value)
+{
+
+	//for the value "value" of the already constructed node create a new node
+	node->branchingNodes[value] = new BranchNode<T>(parent->getContent());
+	if(parent->getNext()!=NULL)
+	{
+		//if there are more parents then construct branchin' node
+		for(int i = 0; i<parent->getContent()->getNumValues();i++)
+				constructNode(node->branchingNodes[value],parent->getNext(),i);
+	}
+	else
+	{
+		//...if not create a leaf node - finally using the parameter "target"
+		node->branchingNodes[value] = new LeafNode<T>(target);
+		//fill in the probabilities now
+		//for(int i = 0; i < target->getNumValues();i++)
+		//{
+		//	node->branchingNodes[value]->Nijk = something
+		//}
+	}
+
+}
+
+template<class T>
+void IndexTree<T>::constructTree(DataTable* table)
+{
+
+	// this is the construction of the Index tree - implemented iteratively
+	// first declare two aux variables - an accumulator that is not accumulating anything
+	// but just keeps the value of the current parent that is considered and
+	// the pointer to the newly created (or not) branching node that corresponds to that parent
 	int acc;
-	BranchNode<int>* n;
+	BranchNode<T>* n;
+
+	//now, for each case do:
 	for(int j = 0; j<table->getNumCases(); j++)
 	{
 
+		//for each parent do (notice that if there are no parents this loop is skipped):
 		for(Node<Variable>* node = target->parents->start;node!=target->parents->end;node=node->getNext())
 		{
 
+			//if we are considering the first parent
 			if(node ==target->parents->start)
 			{
-				root = new BranchNode<int>(node->getContent()->getNumValues());
+				//if the root is not constructed yet (in the first case, acctually)
+				if(root!=NULL)
+					root = new BranchNode<T>(node->getContent());
+
+				//we take the value for first parent from the table and store it in acc
+				//throughout this loop acc will correspond to the value of the previous parent wrt to "node"
 				acc = table->getCase(j)[node->getContent()->id];
+
+				//we set the current branchin' node to the root (which represents the first parent)
+				//throughout this loop n will correspond to the branching node of the previous parent wrt to "node"
 				n = root;
 			}
 			else
 			{
+				//if we are considering other parents
 				if(n->branchingNodes[acc]==NULL)
 				{
-					n->branchingNodes[acc] = new BranchNode<int>(node->getContent()->getNumValues());
+					//if the branching node of the previous parent had never been expanded for its current value
+					//we create new brancing node that should correspond to the current parent referenced by "node"
+					n->branchingNodes[acc] = new BranchNode<T>(node->getContent());
 				}
+				//if it already exists just traverse it
 				n=n->branchingNodes[acc];
+
+				//and query the table for the value of the current parent
 				acc = table->getCase(j)[node->getContent()->id];
 			}
 
 
 		}
+
+		//now in n we have the bottommost branching node
+		//in acc we have the value of the parent corresponding to the branching node in n
+		//if there is no leafnode in its branch n->branchingNodes[acc]
 		if(n->branchingNodes[acc]==NULL)
 		{
-			n->branchingNodes[acc] = new LeafNode<int>(target->getNumValues());
+			//we create new leafnode
+			n->branchingNodes[acc] = new LeafNode<T>(target);
+
+			//we traverse to it
 			n = n->branchingNodes[acc];
+
+			//and we link it to the the rest of the leaves
 			this->leaves.addToBack(n->branchingNodes[acc]);
 		}
-		((LeafNode<int>*)n)->Nijk[table->getCase(j)[target->id]]++;
-		((LeafNode<int>*)n)->Nij++;
+
+		//we increment the Nijk and Nij
+		((LeafNode<T>*)n)->Nijk[table->getCase(j)[target->id]]++;
+		((LeafNode<T>*)n)->Nij++;
 	}
 }
 
 template<class T>
 IndexTree<T>::~IndexTree() {
-	// TODO Auto-generated destructor stub
+
+	//calls destructior of the branch or leaf node (TreeNode constructor is virtual)
+	delete root;
 }
 
 #endif /* INDEXTREE_H_ */
