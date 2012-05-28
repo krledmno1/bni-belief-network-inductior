@@ -16,6 +16,7 @@ class LeafNode : public TreeNode<T> {
 public:
 	LeafNode();
 	LeafNode(int size);
+	LeafNode(Variable* var);
 	virtual ~LeafNode();
 
 	T* Nijk;
@@ -34,8 +35,18 @@ LeafNode<T>::LeafNode(int size)
 }
 
 template<class T>
+LeafNode<T>::LeafNode(Variable* var)
+{
+	this->TreeNode(var);
+	Nijk = new T[var->getNumValues()];
+	for(int i = 0; i<var->getNumValues(); i++)
+	{
+		Nijk[i] = 0;
+	}
+}
+
+template<class T>
 LeafNode<T>::LeafNode() {
-	// TODO Auto-generated constructor stub
 
 }
 
@@ -43,7 +54,6 @@ LeafNode<T>::LeafNode() {
 
 template<class T>
 LeafNode<T>::~LeafNode() {
-	// TODO Auto-generated destructor stub
 	if(Nijk!=NULL)
 		delete [] Nijk;
 }
