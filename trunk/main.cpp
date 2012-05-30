@@ -21,6 +21,10 @@ int main(int argc, char* argv[])
 
 	BayesNetwork b(&d);
 
+	IndexTree<int> I(&d,d.getVariables()[0]);
+	I.print();
+
+
 
 
 	delete bla;

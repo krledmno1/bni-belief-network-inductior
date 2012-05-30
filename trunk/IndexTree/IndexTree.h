@@ -59,7 +59,7 @@ IndexTree<T>::IndexTree(DataTable* table, Variable* target)
 template<class T>
 void IndexTree<T>::print()
 {
-	cout << "\nPrinting index tree for " << target->name << ":\n";
+	cout << "\nPrinting index tree for " << *(target->name) << ":\n";
 	if(root!=NULL)
 		root->print();
 }
@@ -149,7 +149,7 @@ void IndexTree<T>::constructTree(DataTable* table)
 	// but just keeps the value of the current parent that is considered and
 	// the pointer to the newly created (or not) branching node that corresponds to that parent
 	int acc;
-	BranchNode<T>* n;
+	BranchNode<T>* n=NULL;
 
 	//now, for each case do:
 	for(int j = 0; j<table->getNumCases(); j++)
@@ -172,7 +172,7 @@ void IndexTree<T>::constructTree(DataTable* table)
 
 				//we set the current branchin' node to the root (which represents the first parent)
 				//throughout this loop n will correspond to the branching node of the previous parent wrt to "node"
-				n = root;
+				n = (BranchNode<T>*)root;
 			}
 			else
 			{
@@ -184,7 +184,7 @@ void IndexTree<T>::constructTree(DataTable* table)
 					n->branchingNodes[acc] = new BranchNode<T>(node->getContent());
 				}
 				//if it already exists just traverse it
-				n=n->branchingNodes[acc];
+				n=(BranchNode<T>*)n->branchingNodes[acc];
 
 				//and query the table for the value of the current parent
 				acc = table->getCase(j)[node->getContent()->id];
@@ -193,24 +193,39 @@ void IndexTree<T>::constructTree(DataTable* table)
 
 		}
 
-		//now in n we have the bottommost branching node
-		//in acc we have the value of the parent corresponding to the branching node in n
-		//if there is no leafnode in its branch n->branchingNodes[acc]
-		if(n->branchingNodes[acc]==NULL)
+
+		if(n==NULL)
 		{
-			//we create new leafnode
-			n->branchingNodes[acc] = new LeafNode<T>(target);
+			//this means that there are no parents of the target node
+			//we create only one leafnode at root
+			root = new LeafNode<T>(target);
+			this->leaves.addToBack((LeafNode<T>*)root);
 
-			//we traverse to it
-			n = n->branchingNodes[acc];
-
-			//and we link it to the the rest of the leaves
-			this->leaves.addToBack(n->branchingNodes[acc]);
+			//we increment the Nijk and Nij
+			((LeafNode<T>*)root)->Nijk[table->getCase(j)[target->id]]+1;
+			((LeafNode<T>*)root)->Nij+1;
 		}
+		else
+		{
+			//now in n we have the bottommost branching node
+			//in acc we have the value of the parent corresponding to the branching node in n
+			//if there is no leafnode in its branch n->branchingNodes[acc]
+			LeafNode<T>* l = (LeafNode<T>*)n->branchingNodes[acc];
+			if(l==NULL)
+			{
+				//we create new leafnode
+				l = new LeafNode<T>(target);
 
-		//we increment the Nijk and Nij
-		((LeafNode<T>*)n)->Nijk[table->getCase(j)[target->id]]++;
-		((LeafNode<T>*)n)->Nij++;
+				n->branchingNodes[acc] = l;
+
+				//and we link it to the the rest of the leaves
+				this->leaves.addToBack(l);
+			}
+
+			//we increment the Nijk and Nij
+			l->Nijk[table->getCase(j)[target->id]]+1;
+			l->Nij+1;
+		}
 	}
 }
 

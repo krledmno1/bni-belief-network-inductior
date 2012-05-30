@@ -31,11 +31,11 @@ template<class T>
 void BranchNode<T>::print()
 {
 	//prints node for debugging purposes
-	cout << "Branch node for variable " << this->var->name;
+	cout << "Branch node for variable " << *(this->var->name);
 	cout << "\n     Children:";
 	for(int i = 0; i<this->var->getNumValues();i++)
 	{
-		cout << "\n               value:" << this->var->getValueName(i) << "  child: ";
+		cout << "\n               value:" << *(this->var->getValueName(i)) << "  child: ";
 		branchingNodes[i]->print();
 	}
 

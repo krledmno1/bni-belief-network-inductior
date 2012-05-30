@@ -29,11 +29,12 @@ template<class T>
 void LeafNode<T>::print()
 {
 	//prints the node for debugging purposes
-	cout << "Leaf node for variable " << this->var->name;
+	cout << "Leaf node for variable " << *(this->var->name);
 	cout << "\n     Counts: ";
 	for(int i = 0; i<this->var->getNumValues();i++)
 	{
-		cout << "\n               value:" << this->var->getValueName(i) << "  count: " << Nijk[i];
+		cout << "\n               value:" << *(this->var->getValueName(i));
+		cout << "  count: " << Nijk[i];
 	}
 	cout << "\n     Total: " << Nij;
 }

@@ -122,6 +122,7 @@ string* Variable::getValueName(int valueId) {
 	int i = 0;
 	while(i < valueId && node != NULL) {
 		node = node->getNext();
+		i++;
 	}
 
 	if(node != NULL) {
