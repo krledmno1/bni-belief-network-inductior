@@ -176,6 +176,9 @@ DataTable::DataTable(char* filePath) {
 
 				cout << "Found " << numVars << " variables (" << line << ")\n";
 
+				//create variables
+				this->variables = new Variable*[numVars];
+
 				// Reads the names and creates the variables (all but the last one)
 				oldSepIndex = 0;
 				currSepIndex = 0;
@@ -197,14 +200,14 @@ DataTable::DataTable(char* filePath) {
 
 				//count cases
 				numCases = 0;
+				getline(file, line);
 				while(!file.eof()) // For each line
 				{
-					getline(file, line);
 					numCases++;
 					cout << "\nCase " << numCases;
+					getline(file, line);
 
 				}
-				numCases--;
 
 				//create table
 				table = new int*[numCases];
@@ -222,16 +225,16 @@ DataTable::DataTable(char* filePath) {
 				oldSepIndex = 0;
 				currSepIndex = 0;
 				int valueId;	//id of the value (returned by the Variable object
+				getline(file, line);
 				while(!file.eof()) // For each line
 				{
 					cout << "\nCase " << i + 1 << ": ";
-					getline(file, line);
 
 					j = 0;
 					oldSepIndex = 0;
 					currSepIndex = 0;
 
-					while (currSepIndex != string::npos){ // For each value on the line
+					while (currSepIndex != string::npos && !line.empty()){ // For each value on the line
 
 						// Read the value
 						currSepIndex = line.find_first_of(",", oldSepIndex);
@@ -249,6 +252,8 @@ DataTable::DataTable(char* filePath) {
 					i++;
 
 					cout << "\n";
+					getline(file, line);
+
 				}
 
 
