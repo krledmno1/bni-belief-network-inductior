@@ -53,6 +53,7 @@ LeafNode<T>::LeafNode(Variable* var)
 	{
 		Nijk[i] = 0;
 	}
+	Nij = 0;
 }
 
 template<class T>
