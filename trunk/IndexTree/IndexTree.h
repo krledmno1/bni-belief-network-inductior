@@ -44,6 +44,7 @@ IndexTree<T>::IndexTree() {
 
 template<class T>
 IndexTree<T>::IndexTree(Variable* target) {
+	root=NULL;
 	this->target = target;
 	constructTree();
 
@@ -52,6 +53,7 @@ IndexTree<T>::IndexTree(Variable* target) {
 template<class T>
 IndexTree<T>::IndexTree(DataTable* table, Variable* target)
 {
+	root=NULL;
 	this->target = target;
 	constructTree(table);
 }
@@ -198,12 +200,18 @@ void IndexTree<T>::constructTree(DataTable* table)
 		{
 			//this means that there are no parents of the target node
 			//we create only one leafnode at root
-			root = new LeafNode<T>(target);
-			this->leaves.addToBack((LeafNode<T>*)root);
+			if(root==NULL)
+			{
+				root = new LeafNode<T>(target);
+				this->leaves.addToBack((LeafNode<T>*)root);
+			}
 
 			//we increment the Nijk and Nij
-			((LeafNode<T>*)root)->Nijk[table->getCase(j)[target->id]]+1;
-			((LeafNode<T>*)root)->Nij+1;
+			LeafNode<T>* l = (LeafNode<T>*)root;
+			int caseVal = table->getCase(j)[target->id];
+
+			l->Nijk[caseVal]=l->Nijk[caseVal]+1;
+			l->Nij=l->Nij+1;
 		}
 		else
 		{
@@ -223,8 +231,10 @@ void IndexTree<T>::constructTree(DataTable* table)
 			}
 
 			//we increment the Nijk and Nij
-			l->Nijk[table->getCase(j)[target->id]]+1;
-			l->Nij+1;
+			int caseVal = table->getCase(j)[target->id];
+
+			l->Nijk[caseVal]=l->Nijk[caseVal]+1;
+			l->Nij=l->Nij+1;
 		}
 	}
 }

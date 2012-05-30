@@ -152,8 +152,8 @@ DataTable::DataTable(char* filePath) {
 		{
 			cout << "Reading file: " << filePath << "\n";
 
-			int numVars = 0;
-			int numCases = 0;
+			this->numVars = 0;
+			this->numCases = 0;
 
 
 			int currSepIndex;
