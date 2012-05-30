@@ -43,6 +43,7 @@ void BayesNetwork::print()
 	cout << "\nPrinting Bayes network:";
 	for(int i = 0; i<numVars;i++)
 	{
+		cout << "\n";
 		vars[i]->print();
 		vars[i]->printChildren();
 	}
