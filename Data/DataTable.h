@@ -146,8 +146,130 @@ DataTable::DataTable(int numCases, int numVars, Variable** variables) {
 	}
 }
 
-
 DataTable::DataTable(char* filePath) {
+
+	if (strlen(filePath) > 0)
+		{
+			cout << "Reading file: " << filePath << "\n";
+
+			int numVars = 0;
+			int numCases = 0;
+
+
+			int currSepIndex;
+			int oldSepIndex;
+			string line;
+			ifstream file;
+			file.open (filePath);
+
+			if(file.is_open())
+			{
+				// Reading the first line with the names of the variables
+				getline(file, line);
+
+				// Finds the number of variables
+				currSepIndex = -1;
+				do {
+					currSepIndex = line.find(",", currSepIndex + 1);
+					numVars++;
+				} while(currSepIndex != string::npos);
+
+				cout << "Found " << numVars << " variables (" << line << ")\n";
+
+				// Reads the names and creates the variables (all but the last one)
+				oldSepIndex = 0;
+				currSepIndex = 0;
+				string* varName;
+				int varIndex = 0;
+				while (currSepIndex != string::npos) {
+
+					currSepIndex = line.find_first_of(",", oldSepIndex);
+
+					//crate a string name for the variable (destroyed by Variable)
+					varName = new string(line.substr(oldSepIndex, (currSepIndex != string::npos ? currSepIndex : line.size()) - oldSepIndex));
+
+					oldSepIndex = max(oldSepIndex, currSepIndex + 1);
+
+					variables[varIndex] = new Variable(varName);	//destroyed by Bayes network or Data Table...
+					varIndex++;
+					cout << *varName << "\n";
+				}
+
+				//count cases
+				numCases = 0;
+				while(!file.eof()) // For each line
+				{
+					getline(file, line);
+					numCases++;
+					cout << "\nCase " << numCases;
+
+				}
+				numCases--;
+
+				//create table
+				table = new int*[numCases];
+				for(int i = 0; i < numCases; i++) {
+					table[i] = new int[numVars];
+
+				}
+
+				file.close();					//go to the beggining
+				file.open(filePath);
+				getline(file,line);				//skip a line with vars
+
+				int i=0;
+				int j = 0;
+				oldSepIndex = 0;
+				currSepIndex = 0;
+				int valueId;	//id of the value (returned by the Variable object
+				while(!file.eof()) // For each line
+				{
+					cout << "\nCase " << i + 1 << ": ";
+					getline(file, line);
+
+					j = 0;
+					oldSepIndex = 0;
+					currSepIndex = 0;
+
+					while (currSepIndex != string::npos){ // For each value on the line
+
+						// Read the value
+						currSepIndex = line.find_first_of(",", oldSepIndex);
+						string* valueName = new string(line, oldSepIndex, (currSepIndex != string::npos ? currSepIndex : line.size()) - oldSepIndex);
+						oldSepIndex = currSepIndex + 1;
+
+						valueId = variables[j]->addValue(valueName); // Add it to the matching variable
+						table[i][j] = valueId;
+						j++;
+
+						cout << valueId <<  "  ";
+					}
+
+
+					i++;
+
+					cout << "\n";
+				}
+
+
+
+			}
+			else
+			{
+				cout << "\nError reading file!";
+			}
+		}
+		else
+		{
+			cout << "\nInvalid file path!";
+
+		}
+
+
+}
+
+
+/*DataTable::DataTable(char* filePath) {
 	if (strlen(filePath) > 0) {
 		cout << "Reading file: " << filePath << "\n";
 
@@ -157,99 +279,111 @@ DataTable::DataTable(char* filePath) {
 		ifstream file;
 		file.open (filePath);
 
-		// Reading the first line with the names of the variables
-		getline(file, line);
-
-		// Finds the number of variables
-		currSepIndex = -1;
-		int numVars = 0;
-		do {
-			currSepIndex = line.find(",", currSepIndex + 1);
-			numVars++;
-		} while(currSepIndex != string::npos);
-
-		cout << "Found " << numVars << " variables (" << line << ")\n";
-
-		variables = new Variable*[numVars];
-
-		// Reads the names and creates the variables (all but the last one)
-		oldSepIndex = 0;
-		currSepIndex = 0;
-		string* varName;
-		int varIndex = 0;
-		while (currSepIndex != string::npos) {
-			currSepIndex = line.find_first_of(",", oldSepIndex);
-			varName = new string(oldSepIndex, (currSepIndex != string::npos ? currSepIndex : line.size()) - oldSepIndex);
-			oldSepIndex = max(oldSepIndex, currSepIndex + 1);
-
-			variables[varIndex] = new Variable(varName);
-			varIndex++;
-			cout << varName << "\n";
-		} 
-
-		// Reads the name and creates the last variable
-		/*line.copy(varName, line.size() - oldSepIndex, oldSepIndex);
-		vars[varIndex] = new Variable(varName);*/
-		
-		cout << "---------";
-
-		// Reads the values of the variables
-		LinkedList<int*>* cases = new LinkedList<int*>();
-		int** caseValues;
-		int valueId;
-		int i = 0; // cases index
-		int j = 0; // variable index
-		while(!file.eof()) // For each line
+		if(file.is_open())
 		{
-			cout << "\nCase " << i + 1 << ": ";
-
+			// Reading the first line with the names of the variables
 			getline(file, line);
-			
-			j = 0;			
+
+			// Finds the number of variables
+			currSepIndex = -1;
+			int numVars = 0;
+			do {
+				currSepIndex = line.find(",", currSepIndex + 1);
+				numVars++;
+			} while(currSepIndex != string::npos);
+
+			cout << "Found " << numVars << " variables (" << line << ")\n";
+
+			variables = new Variable*[numVars];
+
+			// Reads the names and creates the variables (all but the last one)
 			oldSepIndex = 0;
 			currSepIndex = 0;
-			caseValues = new int*[1];
-			*(caseValues) = new int[numVars];
-			while (currSepIndex != string::npos){ // For each value on the line
+			string* varName;
+			int varIndex = 0;
+			while (currSepIndex != string::npos) {
 
-				// Read the value
 				currSepIndex = line.find_first_of(",", oldSepIndex);
-				string* valueName = new string(line, oldSepIndex, (currSepIndex != string::npos ? currSepIndex : line.size()) - oldSepIndex);
-				oldSepIndex = currSepIndex + 1;
 
-				valueId = variables[j]->addValue(valueName); // Add it to the matching variable
-				*(caseValues)[j] = valueId; // Sets the value of the case
-				j++;
+				varName = new string(line.substr(oldSepIndex, (currSepIndex != string::npos ? currSepIndex : line.size()) - oldSepIndex));
 
-				cout << valueId << "-" << *valueName << "  ";
+				oldSepIndex = max(oldSepIndex, currSepIndex + 1);
+
+				variables[varIndex] = new Variable(varName);
+				varIndex++;
+				cout << *varName << "\n";
 			}
 
-			// Adds the case values to the list
-			cases->addToBack(caseValues);
+			// Reads the name and creates the last variable
+			//line.copy(varName, line.size() - oldSepIndex, oldSepIndex);
+			//vars[varIndex] = new Variable(varName);
 
-			i++;
+			cout << "---------";
 
-			cout << "\n";
+			// Reads the values of the variables
+			LinkedList<int*>* cases = new LinkedList<int*>();
+			int** caseValues;
+			int valueId;
+			int i = 0; // cases index
+			int j = 0; // variable index
+			while(!file.eof()) // For each line
+			{
+				cout << "\nCase " << i + 1 << ": ";
+
+				getline(file, line);
+
+				j = 0;
+				oldSepIndex = 0;
+				currSepIndex = 0;
+				caseValues = new int*[1];
+				caseValues[0] = new int[numVars];
+				while (currSepIndex != string::npos){ // For each value on the line
+
+					// Read the value
+					currSepIndex = line.find_first_of(",", oldSepIndex);
+					string* valueName = new string(line, oldSepIndex, (currSepIndex != string::npos ? currSepIndex : line.size()) - oldSepIndex);
+					oldSepIndex = currSepIndex + 1;
+
+					valueId = variables[j]->addValue(valueName); // Add it to the matching variable
+					caseValues[0][j] = valueId; // Sets the value of the case
+					j++;
+
+					cout << valueId << "-" << *valueName << "  ";
+				}
+
+				// Adds the case values to the list
+				cases->addToBack(caseValues);
+
+				i++;
+
+				cout << "\n";
+			}
+
+			file.close();
+
+			this->numVars = numVars;
+			this->numCases = cases->getSize();
+			table = new int*[numCases];
+			Node<int*>* node = cases->start;
+			for(int i = 0; i < numCases; i++) {
+				table[i] = *(node->getContent());
+				node = node->getNext();
+			}
+			delete cases;
+
+			cout << "---------";
+			cout << "Total: " << numCases << " cases read";
+			cin.get();
+
 		}
-	
-		file.close();
-
-		this->numVars = numVars;
-		this->numCases = cases->getSize();
-		table = new int*[numCases];
-		Node<int*>* node = cases->start;
-		for(int i = 0; i < numCases; i++) {
-			table[i] = *(node->getContent());
-			node = node->getNext();
+		else
+		{
+			cout << "\nError reading file!";
 		}
-		delete cases;
-
-		cout << "---------";
-		cout << "Total: " << numCases << " cases read";
-		cin.get();
 	}
-}
 
+}
+*/
 void DataTable::saveTableToFile(char* filePath) {
 	if (strlen(filePath) > 0) {
 		cout << "\nWriting to file: " << filePath << "\n";
