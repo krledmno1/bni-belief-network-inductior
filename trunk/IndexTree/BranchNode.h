@@ -9,7 +9,6 @@
 #define BRANCHNODE_H_
 
 #include "TreeNode.h"
-#include "../Utilities/HashTable/HashTable.h"
 
 
 
@@ -35,8 +34,11 @@ void BranchNode<T>::print()
 	cout << "\n     Children:";
 	for(int i = 0; i<this->var->getNumValues();i++)
 	{
-		cout << "\n               value:" << *(this->var->getValueName(i)) << "  child: ";
-		branchingNodes[i]->print();
+		if(branchingNodes[i]!=NULL)
+		{
+			cout << "\n               value:" << *(this->var->getValueName(i)) << "  child: ";
+			branchingNodes[i]->print();
+		}
 	}
 
 
@@ -49,6 +51,11 @@ BranchNode<T>::BranchNode(Variable* corr)
 {
 	//initializes the var reference and array of pointers
 	branchingNodes = new TreeNode<T>*[corr->getNumValues()];
+	for(int i = 0; i<corr->getNumValues();i++)
+	{
+		branchingNodes[i]=NULL;
+	}
+
 }
 
 template<class T>

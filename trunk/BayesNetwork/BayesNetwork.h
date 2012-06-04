@@ -8,60 +8,47 @@
 #define BAYESNETWORK_H_
 
 
-#include "../Utilities/LinkedList/LinkedList.h"
 #include "../Data/DataTable.h"
-#include "../BayesNetwork/Variable.h"
 
-class DataTable;
 
 class BayesNetwork {
 private:
-	Variable** vars;
+	Variable** vars;		//maybe unnessesary
 	DataTable* data; 
-	int numVars;
+	int numVars;			//maybe unnessesary
 
 
 public:
+	//to be used with already imported datatable
 	BayesNetwork(DataTable* data);
+
+	//to be used to init network from a file
+	//and use random cpts
+	BayesNetwork(char* filePath,int numCases);
+
+	//to be used to init network from a file
+	//and to init cpts from files
+	BayesNetwork(char* filePath,int numCases,char* cpt_file[]);
+
+
 
 	~BayesNetwork();
 	double learnStructure();
 	void createProbTables();
-	DataTable generateData();
-	void print();
 
+
+
+	void print();
+	int getVarId(string name);
+private:
+	//these two are used for sampling
+	DataTable* generateDataFileCDT(int numCases, char* cpt_file[]);
+	DataTable* generateDataRandomCDT(int numCases);
+	DataTable* generateData(int numCases);
+	void readStructure(char* filePath);
 };
 
-BayesNetwork::BayesNetwork(DataTable* data) {
-	this->data=data;
-	vars = data->getVariables();
-	numVars = data->getNumVars();
-}
 
-void BayesNetwork::print()
-{
-	cout << "\nPrinting Bayes network:";
-	for(int i = 0; i<numVars;i++)
-	{
-		cout << "\n";
-		vars[i]->print();
-		vars[i]->printChildren();
-	}
-}
-
-BayesNetwork::~BayesNetwork() {
-
-	//if we need to destroy datatable
-	//if(data!=NULL)
-	//	delete data;
-
-	for(int i =0;i<numVars;i++)
-		delete vars[i];
-	delete [] vars;
-
-}
-
-#include "../Data/DataTable.h"
 
 
 #endif

@@ -8,16 +8,15 @@
 #ifndef INDEXTREE_H_
 #define INDEXTREE_H_
 
-
-#include "../Utilities/LinkedList/LinkedList.h"
 #include "../IndexTree/BranchNode.h"
 #include "LeafNode.h"
-#include "../Data/DataTable.h"
+
 
 
 template<class T>
 class IndexTree {
 public:
+
 	IndexTree();										//not used
 	IndexTree(Variable* target);						//this should be used by CPT and T=double
 	IndexTree(DataTable* table, Variable* target);		//this should be used for conputing Nijk with T=int
@@ -35,6 +34,8 @@ private:
 
 
 };
+
+
 
 template<class T>
 IndexTree<T>::IndexTree() {
@@ -158,14 +159,14 @@ void IndexTree<T>::constructTree(DataTable* table)
 	{
 
 		//for each parent do (notice that if there are no parents this loop is skipped):
-		for(Node<Variable>* node = target->parents->start;node!=target->parents->end;node=node->getNext())
+		for(Node<Variable>* node = target->parents->start;node!=NULL;node=node->getNext())
 		{
 
 			//if we are considering the first parent
 			if(node ==target->parents->start)
 			{
 				//if the root is not constructed yet (in the first case, acctually)
-				if(root!=NULL)
+				if(root==NULL)
 					root = new BranchNode<T>(node->getContent());
 
 				//we take the value for first parent from the table and store it in acc
