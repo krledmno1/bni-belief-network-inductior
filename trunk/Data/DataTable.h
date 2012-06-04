@@ -38,6 +38,7 @@ public:
 	int getNumVars();
 	void saveTableToFile(char* filePath);
 	Variable** getVariables();
+	void print();
 };
 
 #include "../BayesNetwork/Variable.h"

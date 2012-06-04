@@ -49,13 +49,52 @@ Variable::~Variable() {
 }
 
 void Variable::addParent(Variable* parent) {
-	this->parents->addToBack(parent);
-	parent->children->addToBack(this);
+	this->parents->addToFront(parent);
+	parent->children->addToFront(this);
 }
 
 void Variable::addChild(Variable* child) {
-	this->children->addToBack(child);
-	child->parents->addToBack(this);
+	this->children->addToFront(child);
+	child->parents->addToFront(this);
+}
+
+void Variable::removeParent(Variable* parent)
+{
+	if(parents->start->getContent()==parent)
+	{
+		parents->removeFromFront();
+	}
+	else
+	{
+		parents->removeNode(parent);
+	}
+}
+void Variable::removeChild(Variable* child)
+{
+	if(children->start->getContent()==child)
+	{
+		children->removeFromFront();
+	}
+	else
+	{
+		children->removeNode(child);
+	}
+
+}
+
+bool Variable::isChild(Variable* parent)
+{
+	if(parents->find(parent)==NULL)
+		return false;
+	else
+		return true;
+}
+bool Variable::isParent(Variable* child)
+{
+	if(children->find(child)==NULL)
+			return false;
+		else
+			return true;
 }
 
 int Variable::getNumValues() {

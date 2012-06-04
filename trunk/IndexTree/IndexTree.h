@@ -66,6 +66,11 @@ void IndexTree<T>::print()
 	if(root!=NULL)
 		root->print();
 }
+template<class T>
+LinkedList<LeafNode<T> >* IndexTree<T>::getNijks()
+{
+	return &(this->leaves);
+}
 
 
 template<class T>
@@ -133,7 +138,9 @@ void IndexTree<T>::constructNode(BranchNode<T>* node,Node<Variable>* parent, int
 	else
 	{
 		//...if not create a leaf node - finally using the parameter "target"
-		node->branchingNodes[value] = new LeafNode<T>(target);
+		BranchNode<T>* finalNode = (BranchNode<T>*)node->branchingNodes[value];
+		for(int i = 0; i<parent->getContent()->getNumValues();i++)
+			finalNode->branchingNodes[i] = new LeafNode<T>(target);
 		//fill in the probabilities now
 		//for(int i = 0; i < target->getNumValues();i++)
 		//{

@@ -1,0 +1,11 @@
+x1,x2,x3
+present,absent,absent
+present,present,present
+absent,absent,present
+present,present,present
+absent,absent,absent
+absent,present,present
+present,present,present
+absent,absent,absent
+present,present,present
+absent,absent,absent
