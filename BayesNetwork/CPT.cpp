@@ -33,17 +33,18 @@ int CPT::sample()
 
 	//and now we find index (value) whose probability is the highes among those
 	//that are lower that sampled value
-	double maxmin = probs[0];
+	double sum = probs[0];
 	int value = 0;
-	for(int i=0;i<cpt->target->getNumValues();i++)
+	for(int i=1;i<cpt->target->getNumValues();i++)
 	{
-		if(probs[i]<sample)
+		if(sum>=sample)
 		{
-			if(probs[i]>maxmin)
-			{
-				maxmin=probs[i];
-				value=i;
-			}
+			value=i-1;
+			break;
+		}
+		else
+		{
+			sum += probs[i];
 		}
 	}
 
@@ -147,61 +148,69 @@ void CPT::generateRandomValues()
 {
 	Variable* var=cpt->target;
 	int numParents = var->parents->getSize();
-	int* numPrevParentValues = new int[numParents]; // Number of combinations of values of the parents up to (including) the i-th parent
-	int* numParentValues = new int[numParents]; // Number of values of the i-th parent
 
-	// Fills the arrays
-	numPrevParentValues[0] =  var->parents->start->getContent()->getNumValues();
-	numParentValues[0] = var->parents->start->getContent()->getNumValues();
-	if(numParents > 1)
+	if(numParents>0)
 	{
-		int i = 1;
-		for(Node<Variable>* node = var->parents->start->getNext(); node != NULL; node = node->getNext())
+		int* numPrevParentValues = new int[numParents]; // Number of combinations of values of the parents up to (including) the i-th parent
+		int* numParentValues = new int[numParents]; // Number of values of the i-th parent
+
+		// Fills the arrays
+		numPrevParentValues[0] =  var->parents->start->getContent()->getNumValues();
+		numParentValues[0] = var->parents->start->getContent()->getNumValues();
+		if(numParents > 1)
 		{
-			numParentValues[i] = node->getContent()->getNumValues();
-			numPrevParentValues[i] = numPrevParentValues[i - 1] * numParentValues[i];
-			i++;
+			int i = 1;
+			for(Node<Variable>* node = var->parents->start->getNext(); node != NULL; node = node->getNext())
+			{
+				numParentValues[i] = node->getContent()->getNumValues();
+				numPrevParentValues[i] = numPrevParentValues[i - 1] * numParentValues[i];
+				i++;
+			}
 		}
+
+		// Number of cases is the product of the number of values of each parent
+		int numCases = numPrevParentValues[numParents - 1];
+
+		/*
+		 * Generates all the possible value combinations and calls the function to generate the probability for each
+		 *	For a variable with 4 parents all of them binary it would generate the following cases (in this order):
+		 *	0000
+		 *	0001
+		 *	0010
+		 *	0011
+		 *	...
+		 */
+
+		int* parentValues;
+		for(int k = 0; k < numCases; k++)
+		{
+			// A combination of the value of the parents
+			parentValues = new int[numParents];
+
+			// Maps a case number to a combination of values of the parents
+			for(int l = numParents - 1; l > 0; l--)
+			{
+				// (number of cases / number of possible values of the other variables) % number of values of this variable
+				parentValues[l] = (k / numPrevParentValues[l - 1]) % numParentValues[l];
+				cout << parentValues[l] << " ";
+			}
+			parentValues[0] = k % numParentValues[0];
+
+			cout << parentValues[0] << "\n";
+
+			// Assigns the probabilities for the combination of parents
+			generateRandomProbabilities(parentValues, var->getNumValues());
+
+			delete [] parentValues;
+		}
+
+		delete [] numParentValues;
+		delete [] numPrevParentValues;
 	}
-
-	// Number of cases is the product of the number of values of each parent
-	int numCases = numPrevParentValues[numParents - 1];
-
-	/*
-	 * Generates all the possible value combinations and calls the function to generate the probability for each
-	 *	For a variable with 4 parents all of them binary it would generate the following cases (in this order):
-	 *	0000
-	 *	0001
-	 *	0010
-	 *	0011
-	 *	...
-	 */
-
-	int* parentValues;
-	for(int k = 0; k < numCases; k++)
+	else
 	{
-		// A combination of the value of the parents
-		parentValues = new int[numParents];
-
-		// Maps a case number to a combination of values of the parents
-		for(int l = numParents - 1; l > 0; l--)
-		{
-			// (number of cases / number of possible values of the other variables) % number of values of this variable
-			parentValues[l] = (k / numPrevParentValues[l - 1]) % numParentValues[l];
-			cout << parentValues[l] << " ";
-		}
-		parentValues[0] = k % numParentValues[0];
-
-		cout << parentValues[0] << "\n";
-
-		// Assigns the probabilities for the combination of parents
-		generateRandomProbabilities(parentValues, var->getNumValues());
-
-		delete [] parentValues;
+		generateRandomProbabilities(NULL, var->getNumValues());
 	}
-
-	delete [] numParentValues;
-	delete [] numPrevParentValues;
 }
 
 void CPT::setProb(int* parent_values, double value)
@@ -222,7 +231,7 @@ double CPT::getProb(int* parent_values, int variableValueId)
 void CPT::generateRandomProbabilities(int* parent_values, int numValues)
 {
 	const int MAX_RANGE = 100;
-	srand((unsigned int) time(0));
+	//srand((unsigned int) time(0));
 
 	// Variables have to have at least two possible values, otherwise they can be dropped
 	if(numValues < 2)
@@ -268,7 +277,7 @@ void CPT::generateRandomProbabilities(int* parent_values, int numValues)
 int CPT::generateValue(int* parent_values, int numValues)
 {
 	const int MAX_RANGE = 10000;
-	srand((unsigned int) time(0));
+	//srand((unsigned int) time(0));
 
 	// Get the probabilities for variables value conditioned on the give parents' values
 	double* probabilities = cpt->getProbabilities(parent_values);

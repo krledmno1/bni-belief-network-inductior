@@ -12,22 +12,55 @@ BayesNetwork::BayesNetwork(DataTable* data) {
 	this->data=data;
 	vars = data->getVariables();
 	numVars = data->getNumVars();
+	int r = maxR();
+	this->lookupTable = new LookupTable(this->data->getNumCases()+r);
 }
+
+BayesNetwork::BayesNetwork(BayesNetwork* net)
+{
+	numVars = net->numVars;
+	data = net->data;
+	vars = new Variable*[numVars];
+	lookupTable = NULL;
+
+}
+
 BayesNetwork::BayesNetwork(char* filePath,int numCases)
 {
+	numVars = 0;
+	data = NULL;
+	vars = NULL;
 	readStructure(filePath);
 	generateDataRandomCDT(numCases);
+	int r = maxR();
+	this->lookupTable = new LookupTable(this->data->getNumCases()+r);
 }
 
 BayesNetwork::BayesNetwork(char* filePath,int numCases,char* cpt_file[])
 {
+	numVars = 0;
+	data = NULL;
+	vars = NULL;
 	readStructure(filePath);
-	generateDataFileCDT(numCases,cpt_file);
+	generateDataFileCPT(numCases,cpt_file);
+	int r = maxR();
+	this->lookupTable = new LookupTable(this->data->getNumCases()+r);
+}
+int BayesNetwork::maxR()
+{
+	int max = vars[0]->getNumValues();
+	for(int i = 0; i<numVars;i++)
+	{
+		if(max<vars[i]->getNumValues())
+		{
+			max = vars[i]->getNumValues();
+		}
+	}
+	return max;
 }
 
-
 //sampling wrapper for CPTs from files
-DataTable* BayesNetwork::generateDataFileCDT(int numCases, char* cpt_file[])
+DataTable* BayesNetwork::generateDataFileCPT(int numCases, char* cpt_file[])
 {
 	for(int i = 0; i<numVars;i++)
 	{
@@ -218,6 +251,93 @@ int BayesNetwork::getVarId(string name)
 }
 
 
+BayesNetwork* BayesNetwork::learnStructure(int maxNumParent)
+{
+	if(maxNumParent>=numVars)
+		maxNumParent=numVars-1;
+	//copy constr. calls copy consr. of vars (without copying parent-child rels)
+	BayesNetwork* newNet = new BayesNetwork(this);
+
+	for(int i =0;i<newNet->numVars;i++)
+	{
+		Variable* currentVariable = newNet->vars[i];
+
+		double contributionOld = g(currentVariable,NULL);
+		bool canProceed = true;
+		while(canProceed && maxNumParent>currentVariable->parents->getSize())
+		{
+			Variable* z = getBestParent(currentVariable);
+			if(z==NULL)
+				break;
+			double contributionNew = z->parenthoodPotential;
+			if(contributionNew>contributionOld)
+			{
+				currentVariable->addParent(z);
+				contributionOld=contributionNew;
+			}
+			else
+				canProceed=false;
+		}
+		currentVariable->print();
+	}
+	return NULL;
+}
+
+double BayesNetwork::g(Variable* current, Variable* potential)
+{
+	if(potential!=NULL)
+	{
+		current->addParent(potential);
+	}
+	IndexTree<int> tree(data,current);
+
+	int ri = current->getNumValues()-1;
+	double result=0;
+	Node<LeafNode<int> >* node = tree.getNijks()->start;
+	for(int j = 0;j<tree.getNijks()->getSize();j++)
+	{
+		result+=lookupTable->lookup(ri);
+		result-=lookupTable->lookup(node->getContent()->Nij+ri);
+
+		for(int k = 0;k<ri+1;k++)
+		{
+			result+=lookupTable->lookup(node->getContent()->Nijk[k]);
+		}
+		node = node->getNext();
+	}
+
+	if(potential!=NULL)
+	{
+		current->removeParent(potential);
+	}
+	return result;
+}
+
+Variable* BayesNetwork::getBestParent(Variable* currentVariable)
+{
+	Variable* bestParent = NULL;
+	double bestpotential = 0;
+	Variable* potentialParent = vars[0];
+	int i = 0;
+	while(potentialParent!=currentVariable)
+	{
+		if(!currentVariable->isChild(potentialParent))
+		{
+			double potential = g(currentVariable,potentialParent);
+			if(potential>bestpotential)
+			{
+				bestParent = potentialParent;
+				bestpotential = potential;
+			}
+		}
+		i++;
+		potentialParent=vars[i];
+	}
+	if(bestParent!=NULL)
+		bestParent->parenthoodPotential = bestpotential;
+	return bestParent;
+}
+
 void BayesNetwork::print()
 {
 	cout << "\nPrinting Bayes network:";
@@ -226,6 +346,11 @@ void BayesNetwork::print()
 		cout << "\n";
 		vars[i]->print();
 		vars[i]->printChildren();
+	}
+
+	if(data!=NULL)
+	{
+		data->print();
 	}
 }
 
@@ -238,5 +363,8 @@ BayesNetwork::~BayesNetwork() {
 	for(int i =0;i<numVars;i++)
 		delete vars[i];
 	delete [] vars;
+
+	if(lookupTable!=NULL)
+		delete lookupTable;
 
 }

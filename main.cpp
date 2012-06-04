@@ -9,14 +9,15 @@
 
 int main(int argc, char* argv[])
 {
-
+	srand((unsigned int) time(0));
 
 	char* bla = strdup("/home/krle/workspace/BNIProject/bni-belief-network-inductior/structure.txt");
 
 
-	BayesNetwork b(bla,7);
+	BayesNetwork b(bla,30);
 
 	b.print();
+
 	delete bla;
 	return 0;
 }

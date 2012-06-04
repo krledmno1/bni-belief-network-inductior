@@ -19,11 +19,10 @@ LookupTable::LookupTable(int size) {
 	this->lookuptable = new double[size];
 
 	//compute values
-	double temp = 1;
-	for(int i = 0; i<size; i++)
+	lookuptable[0] = 0;
+	for(int i = 1; i<size; i++)
 	{
-		this->lookuptable[i] = log(temp);
-		temp = temp*(i+1);
+		this->lookuptable[i] = this->lookuptable[i-1]+ log(i);
 	}
 
 }

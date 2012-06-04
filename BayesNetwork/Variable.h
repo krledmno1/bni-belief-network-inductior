@@ -25,6 +25,7 @@ public:
 	LinkedList<string>* values;
 	CPT* cpt;
 	int sampled_value;
+	double parenthoodPotential;
 
 
 	int id;
@@ -34,6 +35,12 @@ public:
 	~Variable();
 	void addParent(Variable* parent);
 	void addChild(Variable* child);
+	void removeParent(Variable* parent);
+	void removeChild(Variable* child);
+	bool isChild(Variable* parent);
+	bool isParent(Variable* child);
+
+
 	int getNumValues();
 	int addValue(string* value);
 	void print();

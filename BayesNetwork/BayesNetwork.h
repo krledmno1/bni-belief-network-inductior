@@ -9,16 +9,20 @@
 
 
 #include "../Data/DataTable.h"
-
+#include "../LookupTable/LookupTable.h"
 
 class BayesNetwork {
 private:
 	Variable** vars;		//maybe unnessesary
 	DataTable* data; 
 	int numVars;			//maybe unnessesary
-
+	double confidence;
+	LookupTable* lookupTable;
 
 public:
+
+
+
 	//to be used with already imported datatable
 	BayesNetwork(DataTable* data);
 
@@ -33,7 +37,8 @@ public:
 
 
 	~BayesNetwork();
-	double learnStructure();
+
+	BayesNetwork* learnStructure(int maxNumParent);
 	void createProbTables();
 
 
@@ -41,11 +46,15 @@ public:
 	void print();
 	int getVarId(string name);
 private:
+	BayesNetwork(BayesNetwork* net);
 	//these two are used for sampling
-	DataTable* generateDataFileCDT(int numCases, char* cpt_file[]);
+	DataTable* generateDataFileCPT(int numCases, char* cpt_file[]);
 	DataTable* generateDataRandomCDT(int numCases);
 	DataTable* generateData(int numCases);
 	void readStructure(char* filePath);
+	double g(Variable* current, Variable* potential);
+	int maxR();
+	Variable* getBestParent(Variable* currentVariable);
 };
 
 

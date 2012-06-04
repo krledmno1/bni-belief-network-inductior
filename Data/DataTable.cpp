@@ -16,6 +16,8 @@ DataTable::DataTable(Variable** vars, int numCases)
 		return;
 	}
 
+	variables=vars;
+
 	numVars = Variable::varCounter;
 	this->numCases = numCases;
 
@@ -26,6 +28,24 @@ DataTable::DataTable(Variable** vars, int numCases)
 
 }
 
+void DataTable::print()
+{
+	cout << "\nData table: \n";
+	for(int i =0;i<numVars;i++)
+	{
+		cout << *(variables[i]->name) << "  ";
+	}
+	cout << "\n";
+
+	for(int j =0;j<numCases;j++)
+	{
+		for(int i =0;i<numVars;i++)
+		{
+			cout << table[j][i] << " ";
+		}
+		cout << "\n";
+	}
+}
 
 
 int DataTable::getNumCases() {
@@ -48,7 +68,7 @@ DataTable::DataTable(int numCases, int numVars, int maxNumValues, int minNumValu
 		return;
 	}
 
-	srand((unsigned int) time(0));
+	//srand((unsigned int) time(0));
 
 	// Table initialization
 	this->numCases = numCases;
