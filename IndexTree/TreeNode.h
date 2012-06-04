@@ -10,6 +10,8 @@
 
 #include <map>
 #include <iostream>
+
+#include "../Data/DataTable.h"
 #include "../BayesNetwork/Variable.h"
 
 using namespace std;
@@ -50,4 +52,6 @@ void TreeNode<T>::print()
 {
 
 }
+
+
 #endif /* TREENODE_H_ */
