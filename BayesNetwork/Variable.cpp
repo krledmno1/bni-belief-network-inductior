@@ -18,7 +18,6 @@ Variable::Variable(string* name) {
 	this->parents = new LinkedList<Variable>();
 	this->children = new LinkedList<Variable>();
 	this->values = new LinkedList<string>();
-	this->cpt = new CPT(this);
 
 }
 

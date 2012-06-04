@@ -41,6 +41,7 @@ DataTable* BayesNetwork::generateDataRandomCDT(int numCases)
 {
 	for(int i = 0; i<numVars;i++)
 	{
+		vars[i]->cpt = new CPT(vars[i]);
 		vars[i]->cpt->generateRandomValues();
 	}
 	return generateData(numCases);
