@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 	char* bla = strdup("/home/krle/workspace/BNIProject/bni-belief-network-inductior/structure.txt");
 
 
-	BayesNetwork b(bla,30);
+	BayesNetwork b(bla,500);
 
 	b.print();
 
