@@ -35,7 +35,7 @@ int CPT::sample()
 	//that are lower that sampled value
 	double sum = probs[0];
 	int value = 0;
-	for(int i=1;i<cpt->target->getNumValues();i++)
+	for(int i=1;i<=cpt->target->getNumValues();i++)
 	{
 		if(sum>=sample)
 		{

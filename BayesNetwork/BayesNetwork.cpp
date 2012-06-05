@@ -90,6 +90,7 @@ DataTable* BayesNetwork::generateData(int numCases)
 	//create the table
 	data = new DataTable(vars,numCases);
 
+
 	//foreach case and var do a sample
 	for(int i=0;i<numCases;i++)
 	{
