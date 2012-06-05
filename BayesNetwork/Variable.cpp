@@ -13,6 +13,7 @@ Variable::Variable(string* name) {
 	id = varCounter;
 	varCounter++;
 	sampled_value=0;
+	parenthoodPotential=0;
 
 	this->name = name;
 	this->parents = new LinkedList<Variable>();
@@ -20,7 +21,22 @@ Variable::Variable(string* name) {
 	this->values = new LinkedList<string>();
 
 }
+Variable::Variable(Variable* var)
+{
+		this->id = var->id;
+		this->name = var->name;
+		sampled_value=0;
+		parenthoodPotential=0;
 
+		this->parents = new LinkedList<Variable>();
+		this->children = new LinkedList<Variable>();
+		this->values = new LinkedList<string>();
+		for(Node<string>* node=var->values->start; node!=NULL;node = node->getNext())
+		{
+			string* s = new string(node->getContent()->c_str());
+			this->values->addToBack(s);
+		}
+}
 
 
 void Variable::print()

@@ -41,12 +41,12 @@ public:
 	BayesNetwork* learnStructure(int maxNumParent);
 	void createProbTables();
 
-
+	BayesNetwork(BayesNetwork* net);
 
 	void print();
 	int getVarId(string name);
 private:
-	BayesNetwork(BayesNetwork* net);
+
 	//these two are used for sampling
 	DataTable* generateDataFileCPT(int numCases, char* cpt_file[]);
 	DataTable* generateDataRandomCDT(int numCases);
