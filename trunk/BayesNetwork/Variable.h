@@ -31,6 +31,7 @@ public:
 	int id;
 	string* name;
 	Variable(string* name);
+	Variable(Variable* var);
 
 	~Variable();
 	void addParent(Variable* parent);

@@ -11,14 +11,18 @@ int main(int argc, char* argv[])
 {
 	srand((unsigned int) time(0));
 
-	char* bla = strdup("/home/krle/workspace/BNIProject/bni-belief-network-inductior/structure.txt");
+	char* bla = strdup("/home/krle/workspace/BNIProject/bni-belief-network-inductior/data.txt");
+	DataTable d(bla);
+	BayesNetwork b(&d);
 
+	BayesNetwork* newNet = new BayesNetwork(&b);
 
-	BayesNetwork b(bla,500);
+	newNet->learnStructure(2);
 
-	b.print();
+	newNet->print();
 
 	delete bla;
+	delete newNet;
 	return 0;
 }
 

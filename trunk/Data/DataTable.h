@@ -32,6 +32,7 @@ public:
 	DataTable(int numCases, int numVars, int maxNumValues, int minNumValues);
 	DataTable(int numCases, int numVars, Variable** variables);
 	DataTable(char* filePath);
+	~DataTable();
 
 	int getNumCases();
 	int* getCase(int index);

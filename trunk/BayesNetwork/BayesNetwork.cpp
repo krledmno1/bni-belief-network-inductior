@@ -21,7 +21,11 @@ BayesNetwork::BayesNetwork(BayesNetwork* net)
 	numVars = net->numVars;
 	data = net->data;
 	vars = new Variable*[numVars];
-	lookupTable = NULL;
+	for(int i=0;i<numVars;i++)
+	{
+		vars[i] = new Variable(net->vars[i]);
+	}
+	lookupTable = net->lookupTable;
 
 }
 
@@ -257,11 +261,10 @@ BayesNetwork* BayesNetwork::learnStructure(int maxNumParent)
 	if(maxNumParent>=numVars)
 		maxNumParent=numVars-1;
 	//copy constr. calls copy consr. of vars (without copying parent-child rels)
-	BayesNetwork* newNet = new BayesNetwork(this);
 
-	for(int i =0;i<newNet->numVars;i++)
+	for(int i =0;i<numVars;i++)
 	{
-		Variable* currentVariable = newNet->vars[i];
+		Variable* currentVariable = vars[i];
 
 		double contributionOld = g(currentVariable,NULL);
 		bool canProceed = true;
@@ -360,12 +363,20 @@ BayesNetwork::~BayesNetwork() {
 	//if we need to destroy datatable
 	//if(data!=NULL)
 	//	delete data;
-
-	for(int i =0;i<numVars;i++)
-		delete vars[i];
+	if(vars!=NULL)
+	{
+		for(int i =0;i<numVars;i++)
+		{
+			//delete vars[i];
+			vars[i] = NULL;
+		}
 	delete [] vars;
-
+	vars=NULL;
+	}
 	if(lookupTable!=NULL)
+	{
 		delete lookupTable;
+		lookupTable=NULL;
+	}
 
 }

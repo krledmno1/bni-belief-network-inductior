@@ -319,4 +319,36 @@ Variable** DataTable::getVariables()
 	return variables;
 }
 
+DataTable::~DataTable()
+{
+	if(table!=NULL)
+	{
+		for(int i = 0; i< numCases;i++)
+		{
+			if(table[i]!=NULL)
+			{
+				delete table[i];
+				table[i]=NULL;
+			}
+		}
+		delete [] table;
+		table =NULL;
+	}
+
+	if(variables!=NULL)
+		{
+			for(int i = 0; i< numVars;i++)
+			{
+				if(variables[i]!=NULL)
+				{
+					delete variables[i];
+					variables[i]=NULL;
+				}
+			}
+			delete [] variables;
+			variables =NULL;
+		}
+}
+
+
 
