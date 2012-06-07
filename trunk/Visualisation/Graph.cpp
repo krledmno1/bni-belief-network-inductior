@@ -8,7 +8,7 @@
 Graph::Graph(int numVars,int delta,BayesNetwork* net)
 : m_line_width(1)
 {
-
+	this->delta = delta;
 	network = net;
 	num =network->getNumVars();
 
@@ -52,6 +52,7 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 	int length;
 	int* nodes = getLongestPath(&length);		//todo!
 
+
   //draws longest path nodes and arcs between them
   for(int i=0;i<length;i++)
   {
@@ -72,76 +73,104 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 	  {
 		  if(node->getContent()!=network->getVariables()[nodes[i+1]])
 		  {
-			  grid.drawAngledArc(grid.centerX,1+i*2,grid.centerX+grid.arcIntentLevel,grid.centerX,1+i*2+2,(Cairo::RefPtr<Cairo::Context>&)cr);
+			  grid.drawAngledArc(grid.centerX,1+i*2,grid.centerX+grid.arcIntentLevel,grid.centerX,node->getContent()->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
 			  grid.updateArcIndentLevel();
 		  }
 	  }
   }
 
   //draw the rest of the nodes
-  for(int i = 0;i<num;i++)
+  if(length<num)
   {
-	  if(!network->getVariables()[i]->drawn)
+
+	  //first those who have drawn parents
+	  for(int i = 0;i<num;i++)
 	  {
-		  if(!network->getVariables()[i]->parents->isEmpty())
+		  if(!network->getVariables()[i]->drawn && !network->getVariables()[i]->parents->isEmpty())
 		  {
-			  int higestYBox=0;
+			  int higestYBox=-1;
 			  for(Node<Variable>* node = network->getVariables()[i]->parents->start; node!=NULL; node = node->getNext())
 			  {
-				  if(node->getContent()->yBox>higestYBox)
+				  if(node->getContent()->yBox>higestYBox && node->getContent()->drawn)
 				  {
 					  higestYBox=node->getContent()->yBox;
 				  }
 			  }
-			  network->getVariables()[i]->yBox=higestYBox+2;
-			  network->getVariables()[i]->xBox=grid.centerX+grid.nodeIntentLevel;
+			  if(higestYBox>-1)
+			  {
+				  //draw the node at the found level
+				  network->getVariables()[i]->yBox=higestYBox+2;
+				  network->getVariables()[i]->xBox=grid.centerX+grid.nodeIntentLevel;
+				  network->getVariables()[i]->drawn = true;
+				  grid.drawNode(network->getVariables()[i]->id, grid.centerX+grid.nodeIntentLevel,higestYBox+2,(Cairo::RefPtr<Cairo::Context>&)cr);
+				  grid.updateNodeIndentLevel();
 
-			  grid.drawNode(network->getVariables()[i]->id, grid.centerX+grid.nodeIntentLevel,higestYBox+2,(Cairo::RefPtr<Cairo::Context>&)cr);
-			  grid.updateNodeIndentLevel();
+				  //draw the arcs from the already drawn parents
+				  for(Node<Variable>* node = network->getVariables()[i]->parents->start; node!=NULL; node = node->getNext())
+				  {
+					  if(node->getContent()->drawn)
+						  grid.drawArc(node->getContent()->xBox,node->getContent()->yBox,network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
+				  }
 
-			  //all parent arcs
-			  for(Node<Variable>* node = network->getVariables()[i]->parents->start; node!=NULL; node = node->getNext())
-			  {
-				  grid.drawArc(node->getContent()->xBox,node->getContent()->yBox,network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
-			  }
-			  //children acts of drawn nodes
-			  for(Node<Variable>* node = network->getVariables()[i]->children->start; node!=NULL; node = node->getNext())
-			  {
-				  if(node->getContent()->drawn)
-					  grid.drawArc(network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,node->getContent()->xBox,node->getContent()->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
-			  }
-		  }
-		  else
-		  {
-			  /*if(!network->getVariables()[i]->children->isEmpty())
-			  {
+				  //draw the arcs to the already drawn children
 				  for(Node<Variable>* node = network->getVariables()[i]->children->start; node!=NULL; node = node->getNext())
 				  {
 					  if(node->getContent()->drawn)
-					  {
-
-					  }
-					 else
-					 {
-					 	 :(((
-					 }
+						  grid.drawArc(network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,node->getContent()->xBox,node->getContent()->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
 				  }
-			  }*/
+			  }
 		  }
 	  }
+
+	  //then those who have drawn children
+	  for(int i = num-1;i>=0;i--)
+	  {
+		  if(!network->getVariables()[i]->drawn && !network->getVariables()[i]->children->isEmpty())
+		  {
+			  int lowestBox = 1+num*2;
+			  for(Node<Variable>* node = network->getVariables()[i]->children->start; node!=NULL; node = node->getNext())
+			  {
+				  if(node->getContent()->yBox<lowestBox && node->getContent()->drawn)
+				  {
+					  lowestBox=node->getContent()->yBox;
+				  }
+			  }
+			  if(lowestBox<1+2*num)
+			  {
+				  //draw the node at the found level
+				  network->getVariables()[i]->yBox=lowestBox-2;
+				  network->getVariables()[i]->xBox=grid.centerX+grid.nodeIntentLevel;
+				  network->getVariables()[i]->drawn = true;
+				  grid.drawNode(network->getVariables()[i]->id, grid.centerX+grid.nodeIntentLevel,lowestBox-2,(Cairo::RefPtr<Cairo::Context>&)cr);
+				  grid.updateNodeIndentLevel();
+
+
+				  //draw the arcs from the already drawn parents
+				  for(Node<Variable>* node = network->getVariables()[i]->parents->start; node!=NULL; node = node->getNext())
+				  {
+					  if(node->getContent()->drawn)
+						  grid.drawArc(node->getContent()->xBox,node->getContent()->yBox,network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
+				  }
+
+				  //draw the arcs to the already drawn children
+				  for(Node<Variable>* node = network->getVariables()[i]->children->start; node!=NULL; node = node->getNext())
+				  {
+					  if(node->getContent()->drawn)
+						  grid.drawArc(network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,node->getContent()->xBox,node->getContent()->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
+				  }
+			  }
+
+		  }
+
+
+	  }
+
+
+
+
   }
 
-  grid.drawAngledArc(grid.centerX,1,grid.centerX+grid.arcIntentLevel,grid.centerX,5,(Cairo::RefPtr<Cairo::Context>&)cr);
-  grid.updateArcIndentLevel();
-  grid.drawAngledArc(grid.centerX,1,grid.centerX+grid.arcIntentLevel,grid.centerX,7,(Cairo::RefPtr<Cairo::Context>&)cr);
-
-  grid.drawNode(6, grid.centerX+grid.nodeIntentLevel,3,(Cairo::RefPtr<Cairo::Context>&)cr);
-  grid.drawArc(grid.centerX,1,grid.centerX+grid.nodeIntentLevel,3,(Cairo::RefPtr<Cairo::Context>&)cr);
-  grid.updateNodeIndentLevel();
-  grid.drawNode(7, grid.centerX+grid.nodeIntentLevel,3,(Cairo::RefPtr<Cairo::Context>&)cr);
-
-  grid.drawArc(grid.centerX,1,grid.centerX+grid.nodeIntentLevel,3,(Cairo::RefPtr<Cairo::Context>&)cr);
-
+  delete [] nodes;
   return true;
 }
 
@@ -170,6 +199,7 @@ int* Graph::getLongestPath(int* length)
 	for(int i = 0;i<num;i++)
 	{
 		int someLength = exploreNode(network->getVariables()[i],len,from);
+		someLength++;
 		if(someLength>*(length))
 		{
 			startNode = i;
@@ -178,6 +208,11 @@ int* Graph::getLongestPath(int* length)
 			{
 				bestFrom[j]=from[j];
 			}
+		}
+
+		for(int i = 0;i<num;i++)
+		{
+			len[i] = -1;
 		}
 	}
 
@@ -227,3 +262,64 @@ bool Graph::on_timeout()
 
     return true;
 }
+
+
+
+
+
+/*
+
+	  //first those who have parents
+	  for(int i = 0;i<num;i++)
+	  {
+		  if(!network->getVariables()[i]->drawn)
+		  {
+			  if(!network->getVariables()[i]->parents->isEmpty())
+			  {
+				  int higestYBox=0;
+				  for(Node<Variable>* node = network->getVariables()[i]->parents->start; node!=NULL; node = node->getNext())
+				  {
+					  if(node->getContent()->yBox>higestYBox)
+					  {
+						  higestYBox=node->getContent()->yBox;
+					  }
+				  }
+				  network->getVariables()[i]->yBox=higestYBox+2;
+				  network->getVariables()[i]->xBox=grid.centerX+grid.nodeIntentLevel;
+
+				  grid.drawNode(network->getVariables()[i]->id, grid.centerX+grid.nodeIntentLevel,higestYBox+2,(Cairo::RefPtr<Cairo::Context>&)cr);
+				  grid.updateNodeIndentLevel();
+
+				  //all parent arcs
+				  for(Node<Variable>* node = network->getVariables()[i]->parents->start; node!=NULL; node = node->getNext())
+				  {
+					  grid.drawArc(node->getContent()->xBox,node->getContent()->yBox,network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
+				  }
+				  //children acts of drawn nodes
+				  for(Node<Variable>* node = network->getVariables()[i]->children->start; node!=NULL; node = node->getNext())
+				  {
+					  if(node->getContent()->drawn)
+						  grid.drawArc(network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,node->getContent()->xBox,node->getContent()->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
+				  }
+			  }
+
+		  }
+	  }
+
+	  //then those that don't, but have children
+	  for(int i = num-1;i>=0;i--)
+	  {
+		  if(!network->getVariables()[i]->drawn)
+		  {
+			  if(!network->getVariables()[i]->children->isEmpty())
+			  {
+				  for(Node<Variable>* node = network->getVariables()[i]->children->start; node!=NULL; node = node->getNext())
+				  {
+
+				  }
+			  }
+		  }
+	  }
+
+
+ */
