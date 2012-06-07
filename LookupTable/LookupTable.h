@@ -8,6 +8,8 @@
 #ifndef LOOKUPTABLE_H_
 #define LOOKUPTABLE_H_
 
+#include "stdlib.h"
+
 class LookupTable {
 public:
 	LookupTable();

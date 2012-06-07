@@ -40,7 +40,9 @@ double LookupTable::lookup(int index)
 LookupTable::~LookupTable() {
 
 	//deletes the array
-	delete [] lookuptable;
+	if(lookuptable!=NULL)
+		delete [] lookuptable;
+	lookuptable = NULL;
 }
 
 
