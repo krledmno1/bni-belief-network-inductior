@@ -14,6 +14,9 @@ Variable::Variable(string* name) {
 	varCounter++;
 	sampled_value=0;
 	parenthoodPotential=0;
+	drawn = false;
+	xBox=0;
+	yBox=0;
 
 	this->name = name;
 	this->parents = new LinkedList<Variable>();
@@ -27,6 +30,9 @@ Variable::Variable(Variable* var)
 		this->name = var->name;
 		sampled_value=0;
 		parenthoodPotential=0;
+		drawn = false;
+		xBox=0;
+		yBox=0;
 
 		this->parents = new LinkedList<Variable>();
 		this->children = new LinkedList<Variable>();
