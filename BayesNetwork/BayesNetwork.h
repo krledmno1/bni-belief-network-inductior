@@ -20,7 +20,8 @@ private:
 	LookupTable* lookupTable;
 
 public:
-
+	Variable** getVariables();
+	int getNumVars();
 
 
 	//to be used with already imported datatable

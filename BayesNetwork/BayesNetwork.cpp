@@ -106,6 +106,15 @@ DataTable* BayesNetwork::generateData(int numCases)
 	return data;
 }
 
+Variable** BayesNetwork::getVariables()
+{
+	return vars;
+}
+int BayesNetwork::getNumVars()
+{
+	return numVars;
+}
+
 
 //reads the structure of the bayes network (the parent-child relations)
 //from a file along with the cardinality of the variable values
