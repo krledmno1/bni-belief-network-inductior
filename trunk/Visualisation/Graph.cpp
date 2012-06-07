@@ -52,11 +52,14 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 	int length;
 	int* nodes = getLongestPath(&length);		//todo!
 
-	//draws longest path nodes and arcs between them
+  //draws longest path nodes and arcs between them
   for(int i=0;i<length;i++)
   {
 	  int y = 1+i*2;
 	  grid.drawNode(network->getVariables()[nodes[i]]->id, grid.centerX,y,(Cairo::RefPtr<Cairo::Context>&)cr);
+	  network->getVariables()[nodes[i]]->yBox = y;
+	  network->getVariables()[nodes[i]]->xBox = grid.centerX;
+	  network->getVariables()[nodes[i]]->drawn = true;
 	  if(i<length-1)
 		  grid.drawArc(grid.centerX,y,grid.centerX,y+2,(Cairo::RefPtr<Cairo::Context>&)cr);
 
@@ -76,7 +79,57 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   }
 
   //draw the rest of the nodes
+  for(int i = 0;i<num;i++)
+  {
+	  if(!network->getVariables()[i]->drawn)
+	  {
+		  if(!network->getVariables()[i]->parents->isEmpty())
+		  {
+			  int higestYBox=0;
+			  for(Node<Variable>* node = network->getVariables()[i]->parents->start; node!=NULL; node = node->getNext())
+			  {
+				  if(node->getContent()->yBox>higestYBox)
+				  {
+					  higestYBox=node->getContent()->yBox;
+				  }
+			  }
+			  network->getVariables()[i]->yBox=higestYBox+2;
+			  network->getVariables()[i]->xBox=grid.centerX+grid.nodeIntentLevel;
 
+			  grid.drawNode(network->getVariables()[i]->id, grid.centerX+grid.nodeIntentLevel,higestYBox+2,(Cairo::RefPtr<Cairo::Context>&)cr);
+			  grid.updateNodeIndentLevel();
+
+			  //all parent arcs
+			  for(Node<Variable>* node = network->getVariables()[i]->parents->start; node!=NULL; node = node->getNext())
+			  {
+				  grid.drawArc(node->getContent()->xBox,node->getContent()->yBox,network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
+			  }
+			  //children acts of drawn nodes
+			  for(Node<Variable>* node = network->getVariables()[i]->children->start; node!=NULL; node = node->getNext())
+			  {
+				  if(node->getContent()->drawn)
+					  grid.drawArc(network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,node->getContent()->xBox,node->getContent()->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
+			  }
+		  }
+		  else
+		  {
+			  /*if(!network->getVariables()[i]->children->isEmpty())
+			  {
+				  for(Node<Variable>* node = network->getVariables()[i]->children->start; node!=NULL; node = node->getNext())
+				  {
+					  if(node->getContent()->drawn)
+					  {
+
+					  }
+					 else
+					 {
+					 	 :(((
+					 }
+				  }
+			  }*/
+		  }
+	  }
+  }
 
   grid.drawAngledArc(grid.centerX,1,grid.centerX+grid.arcIntentLevel,grid.centerX,5,(Cairo::RefPtr<Cairo::Context>&)cr);
   grid.updateArcIndentLevel();
@@ -113,11 +166,13 @@ int* Graph::getLongestPath(int* length)
 	}
 
 	*(length) = 0;
+	int startNode =0;
 	for(int i = 0;i<num;i++)
 	{
 		int someLength = exploreNode(network->getVariables()[i],len,from);
 		if(someLength>*(length))
 		{
+			startNode = i;
 			*(length)=someLength;
 			for(int j = 0;j<num;j++)
 			{
@@ -129,11 +184,22 @@ int* Graph::getLongestPath(int* length)
 
 
 	int* result = new int[*(length)];
-	for(int i = 0;i<*(length);i++)
+	int i = 1;
+	result[0]=startNode;
+	Variable* nextNode = bestFrom[startNode];
+	while(nextNode!=NULL)
 	{
-
+		result[i++] = nextNode->id;
+		nextNode = bestFrom[nextNode->id];
 	}
+
+	delete [] len;
+	delete [] from;
+	delete [] bestFrom;
+
+	return result;
 }
+
 
 int Graph::exploreNode(Variable* var, int* len,Variable** from)
 {

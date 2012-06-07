@@ -26,6 +26,9 @@ public:
 	CPT* cpt;
 	int sampled_value;
 	double parenthoodPotential;
+	bool drawn;
+	int xBox;
+	int yBox;
 
 
 	int id;
