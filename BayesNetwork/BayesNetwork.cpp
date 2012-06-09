@@ -34,7 +34,9 @@ BayesNetwork::BayesNetwork(char* filePath,int numCases)
 	numVars = 0;
 	data = NULL;
 	vars = NULL;
+	cout << "Reading Bayes structure\n";
 	readStructure(filePath);
+	cout << "Bayes structure read\n";
 	generateDataRandomCDT(numCases);
 	int r = maxR();
 	this->lookupTable = new LookupTable(this->data->getNumCases()+r);
@@ -76,12 +78,18 @@ DataTable* BayesNetwork::generateDataFileCPT(int numCases, char* cpt_file[])
 //sampling wrapper for random CPTs
 DataTable* BayesNetwork::generateDataRandomCDT(int numCases)
 {
+	cout << "Generating CPTs...\n";
 	for(int i = 0; i<numVars;i++)
 	{
+		cout << "CPT for variable " << i << " \n";
 		vars[i]->cpt = new CPT(vars[i]);
 		vars[i]->cpt->generateRandomValues();
 	}
+	cout << "CPTs generated\n";
+
+	cout << "Creating data...\n";
 	return generateData(numCases);
+	cout << "Data created\n";
 
 }
 
@@ -93,7 +101,6 @@ DataTable* BayesNetwork::generateData(int numCases)
 {
 	//create the table
 	data = new DataTable(vars,numCases);
-
 
 	//foreach case and var do a sample
 	for(int i=0;i<numCases;i++)
@@ -172,9 +179,11 @@ void BayesNetwork::readStructure(char* filePath)
 
 						vars[varIndex] = new Variable(varName);	//destroyed by Bayes network or Data Table...
 						varIndex++;
-						cout << *varName << "\n";
+						cout << *varName << " ";
 					}
+					cout << "\n";
 
+					cout << "Reading number of values...\n";
 					//read number of values
 					oldSepIndex = 0;
 					currSepIndex = 0;
@@ -203,12 +212,12 @@ void BayesNetwork::readStructure(char* filePath)
 						varIndex++;
 						delete varName;
 					}
-
-
+					cout << "Read number of values\n";
 
 					//we create dependencies
 					varIndex = 0;
 
+					cout << "Creating dependencies...\n";
 					getline(file, line);
 					while(!file.eof())
 					{
@@ -224,7 +233,11 @@ void BayesNetwork::readStructure(char* filePath)
 							oldSepIndex = max(oldSepIndex, currSepIndex + 1);
 
 							int childId = getVarId(*varName);
-							vars[varIndex]->addChild(vars[childId]);
+							if(childId != -1)
+							{
+								vars[varIndex]->addChild(vars[childId]);
+								vars[childId]->addParent(vars[varIndex]);
+							}
 
 							delete varName;
 
@@ -265,61 +278,81 @@ int BayesNetwork::getVarId(string name)
 }
 
 
-BayesNetwork* BayesNetwork::learnStructure(int maxNumParent)
+BayesNetwork* BayesNetwork::learnStructure(int maxNumParent, int numThreads)
 {
+	cout << "Learning the structure of the Bayes network..." << endl;
+	cout << "Number of variables: " << numVars << endl;
+	cout << "Max number of parents is " << maxNumParent << endl;
+	cout << "Using " << numThreads << " threads." << endl;
+
 	if(maxNumParent>=numVars)
 		maxNumParent=numVars-1;
-	//copy constr. calls copy consr. of vars (without copying parent-child rels)
 
-	for(int i =0;i<numVars;i++)
+	time_t started = time(NULL);
+
+	#pragma omp parallel num_threads(numThreads)
 	{
-		Variable* currentVariable = vars[i];
-
-		double contributionOld = g(currentVariable,NULL);
-		bool canProceed = true;
-		while(canProceed && maxNumParent>currentVariable->parents->getSize())
+		#pragma omp for schedule(dynamic, 1)
+		for(int i = 0; i < numVars; i++)
 		{
-			Variable* z = getBestParent(currentVariable);
-			if(z==NULL)
-				break;
-			double contributionNew = z->parenthoodPotential;
-			if(contributionNew>contributionOld)
+			Variable* currentVariable = vars[i];
+
+			double contributionOld = g(currentVariable,NULL);
+			cout << currentVariable->name << " value without parents " << contributionOld << "\n" << endl;
+			bool canProceed = true;
+			while(canProceed && maxNumParent > currentVariable->parents2->size())
 			{
-				currentVariable->addParent(z);
-				contributionOld=contributionNew;
+				Variable* z = getBestParent(currentVariable);
+				if(z == NULL)
+					break;
+
+				double contributionNew = z->parenthoodPotential;
+				//cout << "Variable " << currentVariable->id << " value with " << currentVariable->parents->getSize() << " parents " << contributionNew << "\n" << endl;
+				if(contributionNew > contributionOld)
+				{
+					currentVariable->addParent(z);
+					z->addChild(currentVariable);
+					contributionOld = contributionNew;
+					//cout << "Variable " << currentVariable->id << " added parent " << z->name << "\n" << endl;
+				}
+				else
+					canProceed = false;
 			}
-			else
-				canProceed=false;
+			currentVariable->print();
 		}
-		currentVariable->print();
 	}
+
+	time_t ended = time(NULL);
+	cout << "Execution time: " << difftime(ended, started) << "s" << endl;
+
 	return NULL;
 }
 
 double BayesNetwork::g(Variable* current, Variable* potential)
 {
-	if(potential!=NULL)
+	if(potential != NULL)
 	{
 		current->addParent(potential);
 	}
 	IndexTree<int> tree(data,current);
 
-	int ri = current->getNumValues()-1;
+	int ri = current->getNumValues() - 1; // Since most of the formulae use ri - 1
 	double result=0;
 	Node<LeafNode<int> >* node = tree.getNijks()->start;
-	for(int j = 0;j<tree.getNijks()->getSize();j++)
+	for(int j = 0; j < tree.getNijks()->getSize(); j++)
 	{
-		result+=lookupTable->lookup(ri);
-		result-=lookupTable->lookup(node->getContent()->Nij+ri);
+		result += lookupTable->lookup(ri);
+		result -= lookupTable->lookup(node->getContent()->Nij + ri);
 
-		for(int k = 0;k<ri+1;k++)
+		for(int k = 0; k < ri + 1; k++)
 		{
-			result+=lookupTable->lookup(node->getContent()->Nijk[k]);
+			result += lookupTable->lookup(node->getContent()->Nijk[k]);
 		}
+
 		node = node->getNext();
 	}
 
-	if(potential!=NULL)
+	if(potential != NULL)
 	{
 		current->removeParent(potential);
 	}
@@ -329,25 +362,28 @@ double BayesNetwork::g(Variable* current, Variable* potential)
 Variable* BayesNetwork::getBestParent(Variable* currentVariable)
 {
 	Variable* bestParent = NULL;
-	double bestpotential = 0;
+	double bestpotential = -DBL_MAX;
 	Variable* potentialParent = vars[0];
 	int i = 0;
-	while(potentialParent!=currentVariable)
+	while(potentialParent != currentVariable)
 	{
 		if(!currentVariable->isChild(potentialParent))
 		{
 			double potential = g(currentVariable,potentialParent);
-			if(potential>bestpotential)
+			if(potential > bestpotential)
 			{
 				bestParent = potentialParent;
 				bestpotential = potential;
 			}
 		}
+
 		i++;
-		potentialParent=vars[i];
+		potentialParent = vars[i];
 	}
-	if(bestParent!=NULL)
+
+	if(bestParent != NULL)
 		bestParent->parenthoodPotential = bestpotential;
+
 	return bestParent;
 }
 

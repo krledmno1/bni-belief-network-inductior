@@ -37,6 +37,7 @@ public:
 	T* removeNode(T* n);
 	void removeAll();
 	bool isEmpty();
+	T* getAt(int index);
 	~LinkedList();
 };
 
@@ -294,6 +295,18 @@ template<class T>
 LinkedList<T>::~LinkedList()
 {
 	removeAll();
+}
+
+template<class T>
+T* LinkedList<T>::getAt(int index)
+{
+	if(index > size - 1)
+		return NULL;
+
+	Node<T>* currNode = start;
+	for(int i = 0; i < index; i++) currNode = currNode->getNext();
+
+	return currNode->getContent();
 }
 
 #endif

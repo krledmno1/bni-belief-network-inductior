@@ -10,6 +10,8 @@
 
 #include "../Data/DataTable.h"
 #include "../LookupTable/LookupTable.h"
+#include <ctime>
+#include <float.h>
 
 class BayesNetwork {
 private:
@@ -39,7 +41,7 @@ public:
 
 	~BayesNetwork();
 
-	BayesNetwork* learnStructure(int maxNumParent);
+	BayesNetwork* learnStructure(int maxNumParent,int numThreads);
 	void createProbTables();
 
 	BayesNetwork(BayesNetwork* net);
