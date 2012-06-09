@@ -7,6 +7,9 @@
 
 #include "LookupTable.h"
 #include "math.h"
+#include <iostream>
+
+using namespace std;
 
 LookupTable::LookupTable() {
 
@@ -25,6 +28,7 @@ LookupTable::LookupTable(int size) {
 		this->lookuptable[i] = this->lookuptable[i-1]+ log(i);
 	}
 
+	this->size = size;
 }
 
 double LookupTable::lookup(int index)

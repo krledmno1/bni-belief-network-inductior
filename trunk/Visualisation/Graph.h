@@ -3,12 +3,12 @@
 
 #include <gtkmm/drawingarea.h>
 #include "../BayesNetwork/BayesNetwork.h"
-
+#include <map>
 
 class Graph : public Gtk::DrawingArea
 {
 public:
-	Graph(int numVars,int delta,BayesNetwork* net);
+	Graph(int delta,BayesNetwork* net);
 	virtual ~Graph();
 
 protected:
@@ -18,12 +18,14 @@ protected:
 	bool on_timeout();
 
 	int* getLongestPath(int* length);
+	int getSubgraphDepth(int rootId, int* depth, int* path);
+	int* getRoots(int* numRoots);
 	int exploreNode(Variable* var, int* len,Variable** from);
 
 
 	double m_line_width;
 	int delta;
-	int num;
+	int numVars;
 	BayesNetwork* network;
 
 };

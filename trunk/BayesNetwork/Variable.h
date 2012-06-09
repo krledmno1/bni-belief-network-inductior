@@ -12,6 +12,7 @@
 #include "../Utilities/LinkedList/LinkedList.h"
 #include <string>
 #include <iostream>
+#include <map>
 using namespace std;
 
 
@@ -20,9 +21,14 @@ class CPT;
 class Variable {
 public:
 	static int varCounter;
-	LinkedList<Variable>* parents;
-	LinkedList<Variable>* children;
-	LinkedList<string>* values;
+//	LinkedList<Variable>* parents;
+//	LinkedList<Variable>* children;
+//	LinkedList<string>* values;
+
+	map<int, Variable*>* parents2;
+	map<int, Variable*>* children2;
+	map<int, string*>* values2;
+
 	CPT* cpt;
 	int sampled_value;
 	double parenthoodPotential;
@@ -33,6 +39,7 @@ public:
 
 	int id;
 	string* name;
+	Variable();
 	Variable(string* name);
 	Variable(Variable* var);
 
@@ -49,8 +56,9 @@ public:
 	int addValue(string* value);
 	void print();
 	void printChildren();
+	void printParents();
 	string* getValueName(int valueId);
-	string* getValueNames();
+	string** getValueNames();
 	const static int MAX_VAR_NAME_LENGTH = 10;
 	const static int MAX_VAR_VALUE_LENGTH = 10;
 };

@@ -17,12 +17,19 @@ CPT::CPT(Variable* var)
 int CPT::sample()
 {
 	//first we construct array of parent values
-	int* parent_vals = new int[cpt->target->parents->getSize()];
-	Node<Variable>* node = cpt->target->parents->start;
-	for(int i=0;i<cpt->target->parents->getSize();i++)
+	int* parent_vals = new int[cpt->target->parents2->size()];
+//	Node<Variable>* node = cpt->target->parents->start;
+//	for(int i=0;i<cpt->target->parents->getSize();i++)
+//	{
+//		parent_vals[i]=node->getContent()->sampled_value;
+//		node = node->getNext();
+//	}
+	int i = 0;
+	map<int, Variable*>::iterator it;
+	for(it = cpt->target->parents2->begin(); it != cpt->target->parents2->end(); it++)
 	{
-		parent_vals[i]=node->getContent()->sampled_value;
-		node = node->getNext();
+		parent_vals[i] = it->second->sampled_value;
+		i++;
 	}
 
 	//now we obtain probability list of target var given parent values
@@ -50,8 +57,11 @@ int CPT::sample()
 
 	cpt->target->sampled_value=value;
 	//we return it to be written in DataTable
-	return value;
 
+	if(parent_vals != NULL)
+		delete [] parent_vals;
+
+	return value;
 }
 
 
@@ -89,7 +99,8 @@ void CPT::readValuesFromFile(char* filePath)
 			getline(file, line); // Reads the line with the variable's id
 			if(var->id == atoi(line.c_str())) // If it is the current variable's id
 			{
-				int numParents = var->parents->getSize();
+//				int numParents = var->parents->getSize();
+				int numParents = var->parents2->size();
 				int* parentValues = new int[numParents];
 
 				int numValues = var->getNumValues();
@@ -147,7 +158,8 @@ void CPT::readValuesFromFile(char* filePath)
 void CPT::generateRandomValues()
 {
 	Variable* var=cpt->target;
-	int numParents = var->parents->getSize();
+//	int numParents = var->parents->getSize();
+	int numParents = var->parents2->size();
 
 	if(numParents>0)
 	{
@@ -155,18 +167,33 @@ void CPT::generateRandomValues()
 		int* numParentValues = new int[numParents]; // Number of values of the i-th parent
 
 		// Fills the arrays
-		numPrevParentValues[0] =  var->parents->start->getContent()->getNumValues();
-		numParentValues[0] = var->parents->start->getContent()->getNumValues();
+//		numPrevParentValues[0] =  var->parents->start->getContent()->getNumValues();
+//		numParentValues[0] = var->parents->start->getContent()->getNumValues();
+//		if(numParents > 1)
+//		{
+//			int i = 1;
+//			for(Node<Variable>* node = var->parents->start->getNext(); node != NULL; node = node->getNext())
+//			{
+//				numParentValues[i] = node->getContent()->getNumValues();
+//				numPrevParentValues[i] = numPrevParentValues[i - 1] * numParentValues[i];
+//				i++;
+//			}
+//		}
+
+		map<int, Variable*>::iterator it = var->parents2->begin();
+		numParentValues[0] = it->second->getNumValues();
+		numPrevParentValues[0] = numParentValues[0];
 		if(numParents > 1)
 		{
 			int i = 1;
-			for(Node<Variable>* node = var->parents->start->getNext(); node != NULL; node = node->getNext())
+			for(it++; it != var->parents2->end(); it++)
 			{
-				numParentValues[i] = node->getContent()->getNumValues();
+				numParentValues[i] = it->second->getNumValues();
 				numPrevParentValues[i] = numPrevParentValues[i - 1] * numParentValues[i];
 				i++;
 			}
 		}
+
 
 		// Number of cases is the product of the number of values of each parent
 		int numCases = numPrevParentValues[numParents - 1];

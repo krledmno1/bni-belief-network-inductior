@@ -10,15 +10,13 @@
 DataTable::DataTable(Variable** vars, int numCases)
 {
 
-
+	numVars = Variable::varCounter;
 	if (!(numCases > 0 && numVars > 0)) {
-		cout << "Incorrect parameters!";
+		cout << "Incorrect parameters!" << endl;
 		return;
 	}
 
 	variables=vars;
-
-	numVars = Variable::varCounter;
 	this->numCases = numCases;
 
 	table = new int* [numCases];
@@ -204,7 +202,6 @@ DataTable::DataTable(char* filePath) {
 				while(!file.eof()) // For each line
 				{
 					numCases++;
-					cout << "\nCase " << numCases;
 					getline(file, line);
 
 				}
@@ -251,12 +248,11 @@ DataTable::DataTable(char* filePath) {
 
 					i++;
 
-					cout << "\n";
 					getline(file, line);
 
 				}
 
-
+				cout << "\n" << endl;
 
 			}
 			else
@@ -283,7 +279,7 @@ void DataTable::saveTableToFile(char* filePath) {
 		string** valueNames = new string* [numVars];
 		for(int i = 0; i < numVars; i++) {
 			varNames[i] = variables[i]->name;
-			valueNames[i] = variables[i]->getValueNames();
+			valueNames[i] = *(variables[i]->getValueNames());
 		}
 
 		ofstream file;
