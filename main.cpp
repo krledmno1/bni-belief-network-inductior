@@ -127,7 +127,8 @@ int getSubgraphDepth(int rootId, int* depth, int** path)
  */
 void reachableNodes(Variable* var, LinkedList<int>* nodes)
 {
-	nodes->addToBack(&(var->id));
+	int* id = new int(var->id);
+	nodes->addToBack(id);
 	map<int, Variable*>::iterator it;
 	for(it = var->children2->begin(); it != var->children2->end(); it++)
 	{
@@ -160,19 +161,20 @@ LinkedList<int>** getReachabilityLists(int* roots, int numRoots)
  * Checks if some of the potential roots belong to the same graph
  * and removes one if that's the case.
  */
-void removeEquivalentGraphs(int numRoots, LinkedList<int>** reachabilityLists)
+LinkedList<int>** removeEquivalentGraphs(int* numRoots, LinkedList<int>** reachabilityLists)
 {
 	// Keeps track of the number of deleted nodes
 	int numDeleted = 0;
 	// For each list of reachable nodes
-	for(int i = 0; i < numRoots - 1; i++)
+	for(int i = 0; i < *numRoots - 1; i++)
 	{
 		// Has a common node been found?
 		bool found = false;
 		// If it hasn't been deleted
 		if(reachabilityLists[i] != NULL)
+		{
 			// For all the subsequent reachability lists
-			for(int j = i + 1; j < numRoots; j++)
+			for(int j = i + 1; j < *numRoots; j++)
 			{
 				// If they haven't been deleted
 				if(reachabilityLists[j] != NULL)
@@ -188,21 +190,35 @@ void removeEquivalentGraphs(int numRoots, LinkedList<int>** reachabilityLists)
 					}
 					if(found) // If two common nodes exist
 					{
-						// Delete one of the lists
-						cout << i << " and " << j << " are the same. Deleting " << j << "\n" << endl;
-						delete reachabilityLists[j];
 						numDeleted++;
+						found = false;
+
+						// Delete the shorter list
+						if(reachabilityLists[i]->getSize() >= reachabilityLists[j]->getSize())
+						{
+							cout << i << " and " << j << " are the same. Deleting " << j << "\n" << endl;
+							delete reachabilityLists[j];
+							reachabilityLists[j] = NULL;
+						}
+						else
+						{
+							cout << i << " and " << j << " are the same. Deleting " << i << "\n" << endl;
+							delete reachabilityLists[i];
+							reachabilityLists[i] = NULL;
+							break; // Goes to the next item in the first list
+						}
 					}
-					found = false;
+
 				}
 			}
+		}
 	}
 
 	// Creates an array of true roots and their reachability lists
-	int finalSize = numRoots - numDeleted;
+	int finalSize = *numRoots - numDeleted;
 	LinkedList<int>** graphList = new LinkedList<int>* [finalSize];
 	int j = 0;
-	for(int i = 0; i < numRoots && j < finalSize; i++)
+	for(int i = 0; i < *numRoots && j < finalSize; i++)
 	{
 		if(reachabilityLists[i] != NULL)
 		{
@@ -210,8 +226,8 @@ void removeEquivalentGraphs(int numRoots, LinkedList<int>** reachabilityLists)
 			j++;
 		}
 	}
-	delete [] reachabilityLists;
-	reachabilityLists = graphList;
+	*numRoots = finalSize;
+	return graphList;
 }
 
 /*
@@ -278,15 +294,42 @@ int main(int argc, char* argv[])
 	network = newNet;
 	numVars = network->getNumVars();
 
+	int numPotentialRoots = 0;
+	int* potentialRoots = getRoots(&numPotentialRoots);
+	LinkedList<int>** reachabilityLists = getReachabilityLists(potentialRoots, numPotentialRoots);
+	LinkedList<int>** graphList = removeEquivalentGraphs(&numPotentialRoots, reachabilityLists);
 
-//	Gtk::Main kit(argc, argv);
-//	Gtk::Window win;
-//	win.set_title("Graph");
-//	win.set_default_size(500,500);
-//	Graph c(40,newNet);
-//	win.add(c);
-//	c.show();
-//	kit.run(win);
+
+	cout << "Drawing graphs\n" << endl;
+	Gtk::Main kit(argc, argv);
+	Gtk::Window** wins = new Gtk::Window* [numPotentialRoots];
+	Graph** graphs = new Graph* [numPotentialRoots];
+	for(int i = 0; i < numPotentialRoots; i++)
+	{
+		cout << "Graph for root #" << (i + 1) << "\n";
+		int* longestPath = new int[graphList[i]->getSize()];
+		int j = 0;
+		for(Node<int>* node = graphList[i]->start; node != NULL; node = node->getNext())
+		{
+			longestPath[j] = *(node->getContent());
+			cout << longestPath[j] << " ";
+			j++;
+		}
+		cout << "\nCopied list into array\n" << endl;
+
+		wins[i] = new Gtk::Window();
+		wins[i]->set_title("Graph");
+		wins[i]->set_default_size(500,500);
+		graphs[i] = new Graph(40,newNet, longestPath, graphList[i]->getSize());
+
+		cout << "Created graph\n" << endl;
+
+		wins[i]->add(*(graphs[i]));
+		(*(graphs[i])).show();
+		kit.run(*(wins[i]));
+
+		cout << "Created window\n" << endl;
+	}
 
 	delete bla;
 	delete newNet;
