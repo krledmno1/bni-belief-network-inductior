@@ -128,6 +128,13 @@ int BayesNetwork::getNumVars()
 	return numVars;
 }
 
+void BayesNetwork::clearDraw()
+{
+	for(int i =0;i<numVars;i++)
+	{
+		vars[i]->drawn = false;
+	}
+}
 
 //reads the structure of the bayes network (the parent-child relations)
 //from a file along with the cardinality of the variable values
@@ -292,6 +299,7 @@ BayesNetwork* BayesNetwork::learnStructure(int maxNumParent, int numThreads)
 	cout << "Max number of parents is " << maxNumParent << endl;
 	cout << "Using " << numThreads << " threads." << endl;
 
+	confidence = 0;
 	if(maxNumParent>=numVars)
 		maxNumParent=numVars-1;
 
@@ -299,9 +307,11 @@ BayesNetwork* BayesNetwork::learnStructure(int maxNumParent, int numThreads)
 
 	#pragma omp parallel num_threads(numThreads)
 	{
-		#pragma omp for schedule(dynamic, 1)
+		#pragma omp for schedule(static, 1)
 		for(int i = 0; i < numVars; i++)
 		{
+
+			//std::cout << "Thread: " << omp_get_thread_num() << std::endl;
 			Variable* currentVariable = vars[i];
 
 			double contributionOld = g(currentVariable,NULL);
@@ -314,7 +324,7 @@ BayesNetwork* BayesNetwork::learnStructure(int maxNumParent, int numThreads)
 					break;
 
 				double contributionNew = z->parenthoodPotential;
-				//cout << "Variable " << currentVariable->id << " value with " << currentVariable->parents->getSize() << " parents " << contributionNew << "\n" << endl;
+				//cout << "Variable " << currentVariable->id << " value with " << currentVariable->parents2->size() << " parents " << contributionNew << "\n" << endl;
 				if(contributionNew > contributionOld)
 				{
 					currentVariable->addParent(z);
@@ -326,10 +336,14 @@ BayesNetwork* BayesNetwork::learnStructure(int maxNumParent, int numThreads)
 					canProceed = false;
 			}
 //			currentVariable->print();
+			confidence += contributionOld;
 		}
 	}
 
+	confidence = -confidence;
 	time_t ended = time(NULL);
+	cout << "Found structure with confidence: " << confidence << endl;
+
 	cout << "Execution time: " << difftime(ended, started) << "s" << endl;
 
 	return NULL;

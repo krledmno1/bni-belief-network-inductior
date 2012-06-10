@@ -12,6 +12,7 @@
 #include "../LookupTable/LookupTable.h"
 #include <ctime>
 #include <float.h>
+#include <omp.h>
 
 class BayesNetwork {
 private:
@@ -24,6 +25,7 @@ private:
 public:
 	Variable** getVariables();
 	int getNumVars();
+	void clearDraw();
 
 
 	//to be used with already imported datatable
