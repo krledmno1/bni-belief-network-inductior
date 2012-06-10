@@ -31,6 +31,7 @@ public:
 	void readValuesFromFile(char* filePath);
 	void generateRandomValues();
 	void generateRandomProbabilities(int* parent_values, int numValues);
+	void print();
 };
 
 #include "../IndexTree/IndexTree.h"

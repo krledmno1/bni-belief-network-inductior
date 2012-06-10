@@ -35,7 +35,7 @@ public:
 
 	//to be used to init network from a file
 	//and to init cpts from files
-	BayesNetwork(char* filePath,int numCases,char* cpt_file[]);
+	BayesNetwork(char* filePath,int numCases,char* cpt_file, char* outputDataFile);
 
 
 
@@ -51,7 +51,7 @@ public:
 private:
 
 	//these two are used for sampling
-	DataTable* generateDataFileCPT(int numCases, char* cpt_file[]);
+	DataTable* generateDataFileCPT(int numCases, char* cpt_file);
 	DataTable* generateDataRandomCDT(int numCases);
 	DataTable* generateData(int numCases);
 	void readStructure(char* filePath);

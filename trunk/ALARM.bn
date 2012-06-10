@@ -4,20 +4,20 @@ LVEDVolume,StrokeVolume
 HRBP
 PVSat
 VentMach
-VertTube
+VentTube
 PAP,Shunt
 Catechol
 HREKG,HRSat
 History,StrokeVolume,LVEDVolume
 Press,VentLung
-Shunt,VentAlv,MinVol,Press
+VentLung,Shunt,VentAlv,Press,MinVol
 TPR
 CO
 PCWP,CVP
 
 
 
-Catechol
+Catechol,BP
 VentTube
 Press,VentLung
 
@@ -27,7 +27,7 @@ PVSat,ArtCO2
 
 
 Catechol,ExpCO2
-SaCO2
+SaO2
 Catechol
 HR
 CO,HRBP,HREKG,HRSat
