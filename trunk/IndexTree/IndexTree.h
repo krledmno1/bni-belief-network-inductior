@@ -10,6 +10,7 @@
 
 #include "../IndexTree/BranchNode.h"
 #include "LeafNode.h"
+#include <omp.h>
 
 
 
@@ -97,28 +98,6 @@ template<class T>
 void IndexTree<T>::constructTree()
 {
 	//see whether there are parents
-//	Node<Variable>* node = target->parents->start;
-//	if(node!=NULL)
-//	{
-//		//if there is at least one - create branching node
-//		root = new BranchNode<T>(node->getContent());
-//
-//			//now for each value of that parent create a node (either branchin' if node->getNext != NULL or leaf otherwise)
-//			for(int i = 0; i<node->getContent()->getNumValues();i++)
-//				constructNode((BranchNode<T>*)root,node->getNext(),i);
-//
-//
-//	}
-//	else
-//	{
-//		//there are no parents of target node, create leaf node immediately
-//		root = new LeafNode<T>(target);
-//		//fill in the probabilities now
-//		//for(int i = 0; i < target->getNumValues();i++)
-//		//{
-//		//	root->Nijk = something
-//		//}
-//	}
 	map<int, Variable*>::iterator it = target->parents2->begin();
 	if(it != target->parents2->end())
 	{
@@ -138,11 +117,6 @@ void IndexTree<T>::constructTree()
 	{
 		//there are no parents of target node, create leaf node immediately
 		root = new LeafNode<T>(target);
-		//fill in the probabilities now
-		//for(int i = 0; i < target->getNumValues();i++)
-		//{
-		//	root->Nijk = something
-		//}
 	}
 }
 
@@ -165,14 +139,7 @@ void IndexTree<T>::constructNode(BranchNode<T>* node,map<int, Variable*>::iterat
 	else
 	{
 		//...if not create a leaf node - finally using the parameter "target"
-//		BranchNode<T>* finalNode = (BranchNode<T>*)node->branchingNodes[value];
-//		for(int i = 0; i<parent->getContent()->getNumValues();i++)
-			node->branchingNodes[value] = new LeafNode<T>(target);
-		//fill in the probabilities now
-		//for(int i = 0; i < target->getNumValues();i++)
-		//{
-		//	node->branchingNodes[value]->Nijk = something
-		//}
+		node->branchingNodes[value] = new LeafNode<T>(target);
 	}
 
 }
@@ -187,12 +154,17 @@ void IndexTree<T>::constructTree(DataTable* table)
 	// the pointer to the newly created (or not) branching node that corresponds to that parent
 	int acc;
 	BranchNode<T>* n=NULL;
+	omp_lock_t writelock;
+	omp_init_lock(&writelock);
 
-	//now, for each case do:
-	for(int j = 0; j < table->getNumCases(); j++)
+	#pragma omp parallel private(n, acc) num_threads(2)
 	{
+		n = NULL;
+		#pragma omp for schedule(dynamic, 100)
+		for(int j = 0; j < table->getNumCases(); j++)//now, for each case do:
+		{
 
-		//for each parent do (notice that if there are no parents this loop is skipped):
+			//for each parent do (notice that if there are no parents this loop is skipped):
 			map<int, Variable*>::iterator it;
 			for(it = target->parents2->begin(); it != target->parents2->end(); it++)
 			{
@@ -201,8 +173,10 @@ void IndexTree<T>::constructTree(DataTable* table)
 				if(it == target->parents2->begin())
 				{
 					//if the root is not constructed yet (in the first case, acctually)
+					omp_set_lock(&writelock);
 					if(root==NULL)
 						root = new BranchNode<T>(it->second);
+					omp_unset_lock(&writelock);
 
 					//we take the value for first parent from the table and store it in acc
 					//throughout this loop acc will correspond to the value of the previous parent wrt to "node"
@@ -215,62 +189,68 @@ void IndexTree<T>::constructTree(DataTable* table)
 				else
 				{
 					//if we are considering other parents
+					omp_set_lock(&writelock);
 					if(n->branchingNodes[acc]==NULL)
 					{
 						//if the branching node of the previous parent had never been expanded for its current value
 						//we create new brancing node that should correspond to the current parent referenced by "node"
 						n->branchingNodes[acc] = new BranchNode<T>(it->second);
 					}
+					omp_unset_lock(&writelock);
 					//if it already exists just traverse it
 					n=(BranchNode<T>*)n->branchingNodes[acc];
 
 					//and query the table for the value of the current parent
 					acc = table->getCase(j)[it->second->id];
 				}
-
-
-		}
-
-
-		if(n==NULL)
-		{
-			//this means that there are no parents of the target node
-			//we create only one leafnode at root
-			if(root==NULL)
-			{
-				root = new LeafNode<T>(target);
-				this->leaves.addToBack((LeafNode<T>*)root);
 			}
 
-			//we increment the Nijk and Nij
-			LeafNode<T>* l = (LeafNode<T>*)root;
-			int caseVal = table->getCase(j)[target->id];
-
-			l->Nijk[caseVal]=l->Nijk[caseVal]+1;
-			l->Nij=l->Nij+1;
-		}
-		else
-		{
-			//now in n we have the bottommost branching node
-			//in acc we have the value of the parent corresponding to the branching node in n
-			//if there is no leafnode in its branch n->branchingNodes[acc]
-			LeafNode<T>* l = (LeafNode<T>*)n->branchingNodes[acc];
-			if(l==NULL)
+			if(n==NULL)
 			{
-				//we create new leafnode
-				l = new LeafNode<T>(target);
+				//this means that there are no parents of the target node
+				//we create only one leafnode at root
+				omp_set_lock(&writelock);
+				if(root==NULL)
+				{
+					root = new LeafNode<T>(target);
+					this->leaves.addToBack((LeafNode<T>*)root);
+				}
+				omp_unset_lock(&writelock);
 
-				n->branchingNodes[acc] = l;
+				//we increment the Nijk and Nij
+				LeafNode<T>* l = (LeafNode<T>*)root;
+				int caseVal = table->getCase(j)[target->id];
 
-				//and we link it to the the rest of the leaves
-				this->leaves.addToBack(l);
+				omp_set_lock(&writelock);
+				l->Nijk[caseVal]=l->Nijk[caseVal]+1;
+				l->Nij=l->Nij+1;
+				omp_unset_lock(&writelock);
 			}
+			else
+			{
+				//now in n we have the bottommost branching node
+				//in acc we have the value of the parent corresponding to the branching node in n
+				//if there is no leafnode in its branch n->branchingNodes[acc]
+				omp_set_lock(&writelock);
+				LeafNode<T>* l = (LeafNode<T>*)n->branchingNodes[acc];
+				if(l==NULL)
+				{
+					//we create new leafnode
+					l = new LeafNode<T>(target);
+					n->branchingNodes[acc] = l;
+					//and we link it to the the rest of the leaves
+					this->leaves.addToBack(l);
+				}
+				omp_unset_lock(&writelock);
 
-			//we increment the Nijk and Nij
-			int caseVal = table->getCase(j)[target->id];
+				//we increment the Nijk and Nij
+				int caseVal = table->getCase(j)[target->id];
 
-			l->Nijk[caseVal]=l->Nijk[caseVal]+1;
-			l->Nij=l->Nij+1;
+				omp_set_lock(&writelock);
+				l->Nijk[caseVal]=l->Nijk[caseVal]+1;
+				l->Nij=l->Nij+1;
+				omp_unset_lock(&writelock);
+			}
 		}
 	}
 }
