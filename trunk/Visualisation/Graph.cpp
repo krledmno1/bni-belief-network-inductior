@@ -5,30 +5,16 @@
 #include "Graph.h"
 #include "Grid.h"
 
-Graph::Graph(int delta,BayesNetwork* net)
+Graph::Graph(int delta,BayesNetwork* net, int* nodes, int numNodes)
 //: m_line_width(1)
 {
 	this->delta = delta;
 	network = net;
 	numVars =network->getNumVars();
+	this->nodes = nodes;
+	this->numNodes = numNodes;
 
-	//signal_draw().connect(sigc::mem_fun(*this, &Graph::on_draw), false);
-
-	int numRoots;
-	int* roots = getRoots(&numRoots);
-	cout << "num roots: " << numRoots;
-	for(int i = 0; i < numRoots; i++)
-	{
-		int* path;
-		int depth = 0;
-		int height = getSubgraphDepth(roots[i], &depth, path);
-		cout << "height: " << height << "\n";
-
-		for(int j = 0; j < height; j++)
-			cout << path[j] << " ";
-
-		cout << "\n";
-	}
+	signal_draw().connect(sigc::mem_fun(*this, &Graph::on_draw), false);
 }
 
 Graph::~Graph()
@@ -62,8 +48,8 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
 	//get longest path (returns list of var ids that belong
 	//to the longest path, and by reference returns length of the path
-	int length;
-	int* nodes = getLongestPath(&length);		//todo!
+	int length = numNodes;
+//	int* nodes = getLongestPath(&length);		//todo!
 
 
   //draws longest path nodes and arcs between them
@@ -332,80 +318,6 @@ int Graph::exploreNode(Variable* var, int* len,Variable** from)
 bool Graph::on_timeout()
 {
     return true;
-}
-
-int* Graph::getRoots(int* numRoots)
-{
-	*numRoots = 0;
-	for(int i = 0; i < numVars; i++)
-	{
-//		if(network->getVariables()[i]->parents->getSize() > 0)
-//			(*numRoots)++;
-		if(network->getVariables()[i]->parents2->size() > 0)
-			(*numRoots)++;
-	}
-
-	int* rootIds = new int[*numRoots];
-	int rootCounter = 0;
-	for(int i = 0; i < numVars; i++)
-	{
-//		if(network->getVariables()[i]->parents->getSize() > 0)
-		if(network->getVariables()[i]->parents2->size() > 0)
-		{
-			rootIds[rootCounter] = i;
-			rootCounter++;
-
-			if(rootCounter == *numRoots)
-				break;
-		}
-	}
-
-	return rootIds;
-}
-
-int Graph::getSubgraphDepth(int rootId, int* depth, int* path)
-{
-	Variable* currNode = network->getVariables()[rootId];
-	(*depth)++;
-
-//	int numChildren = currNode->children->getSize();
-	int numChildren = currNode->children2->size();
-	if(numChildren == 0)
-	{
-		path = new int[*depth];
-		(*depth)--;
-		path[(*depth)] = currNode->id;
-
-		return 1;
-	}
-	else
-	{
-		int* bestPath;
-		int maxDepth = 0;
-		for(int i = 0; i < numChildren; i++)
-		{
-			int* childPath;
-//			int subgraphDepth = getSubgraphDepth(currNode->children->getAt(i)->id, depth, childPath);
-			int subgraphDepth = getSubgraphDepth((*(currNode->children2))[i]->id, depth, childPath);
-			if(maxDepth < subgraphDepth)
-			{
-				maxDepth = subgraphDepth;
-				if(bestPath != NULL)
-					delete [] bestPath;
-				bestPath = childPath;
-			}
-			else
-			{
-				delete [] childPath;
-			}
-		}
-		(*depth)--;
-		bestPath[*depth] = currNode->id;
-
-		return maxDepth + 1;
-	}
-
-
 }
 
 /*

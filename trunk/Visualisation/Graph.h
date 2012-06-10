@@ -8,7 +8,7 @@
 class Graph : public Gtk::DrawingArea
 {
 public:
-	Graph(int delta,BayesNetwork* net);
+	Graph(int delta,BayesNetwork* net, int* nodes, int numNodes);
 	virtual ~Graph();
 
 protected:
@@ -18,14 +18,14 @@ protected:
 	bool on_timeout();
 
 	int* getLongestPath(int* length);
-	int getSubgraphDepth(int rootId, int* depth, int* path);
-	int* getRoots(int* numRoots);
 	int exploreNode(Variable* var, int* len,Variable** from);
 
 
 	double m_line_width;
 	int delta;
 	int numVars;
+	int* nodes;
+	int numNodes;
 	BayesNetwork* network;
 
 };
