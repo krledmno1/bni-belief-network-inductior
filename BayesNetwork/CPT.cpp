@@ -18,12 +18,6 @@ int CPT::sample()
 {
 	//first we construct array of parent values
 	int* parent_vals = new int[cpt->target->parents2->size()];
-//	Node<Variable>* node = cpt->target->parents->start;
-//	for(int i=0;i<cpt->target->parents->getSize();i++)
-//	{
-//		parent_vals[i]=node->getContent()->sampled_value;
-//		node = node->getNext();
-//	}
 	int i = 0;
 	map<int, Variable*>::iterator it;
 	for(it = cpt->target->parents2->begin(); it != cpt->target->parents2->end(); it++)
@@ -91,7 +85,7 @@ void CPT::readValuesFromFile(char* filePath)
 	string line;
 	ifstream file;
 	file.open (filePath);
-
+//	cout << "Reading CPT for var: " << cpt->target->id << " numParents: " << cpt->target->parents2->size() << "\n";
 	if(file.is_open())
 	{
 		while(!file.eof())
@@ -115,7 +109,7 @@ void CPT::readValuesFromFile(char* filePath)
 					int newSeparatorIndex = 0;
 					for(int i = 0; i < numParents; i++)
 					{
-						newSeparatorIndex = line.find(",");
+						newSeparatorIndex = line.find(",", oldSeparatorIndex);
 						parentValues[i] = atoi(line.substr(oldSeparatorIndex, newSeparatorIndex - oldSeparatorIndex).c_str());
 						oldSeparatorIndex = newSeparatorIndex + 1;
 					}
@@ -123,17 +117,16 @@ void CPT::readValuesFromFile(char* filePath)
 					// Reads the probabilities and stores them in the CPT
 					for(int i = 0; i < numValues - 1; i++)
 					{
-						newSeparatorIndex = line.find(",");
+						newSeparatorIndex = line.find(",", oldSeparatorIndex);
 						cpt->getProbabilities(parentValues)[i] = atof(line.substr(oldSeparatorIndex, newSeparatorIndex - oldSeparatorIndex).c_str());
 						oldSeparatorIndex = newSeparatorIndex + 1;
 					}
 					cpt->getProbabilities(parentValues)[numValues - 1] = atof(line.substr(oldSeparatorIndex, line.size() - oldSeparatorIndex).c_str());
 
-					delete [] parentValues; // dealocates the memory of the parents' values
-
 					getline(file, line); // reads the next line
 				}
 
+				delete [] parentValues; // dealocates the memory of the parents' values
 				break;
 			}
 			else // if it is not the data for the current variable skip the section
@@ -148,6 +141,7 @@ void CPT::readValuesFromFile(char* filePath)
 				}
 			}
 		}
+
 	}
 }
 
@@ -167,19 +161,6 @@ void CPT::generateRandomValues()
 		int* numParentValues = new int[numParents]; // Number of values of the i-th parent
 
 		// Fills the arrays
-//		numPrevParentValues[0] =  var->parents->start->getContent()->getNumValues();
-//		numParentValues[0] = var->parents->start->getContent()->getNumValues();
-//		if(numParents > 1)
-//		{
-//			int i = 1;
-//			for(Node<Variable>* node = var->parents->start->getNext(); node != NULL; node = node->getNext())
-//			{
-//				numParentValues[i] = node->getContent()->getNumValues();
-//				numPrevParentValues[i] = numPrevParentValues[i - 1] * numParentValues[i];
-//				i++;
-//			}
-//		}
-
 		map<int, Variable*>::iterator it = var->parents2->begin();
 		numParentValues[0] = it->second->getNumValues();
 		numPrevParentValues[0] = numParentValues[0];
@@ -328,6 +309,12 @@ int CPT::generateValue(int* parent_values, int numValues)
 	return -1;
 }
 
+void CPT::print()
+{
+	cout << "CPT for " << cpt->target->name->data() << "\n" << endl;
+	cpt->print();
+	cout << "\n" << endl;
+}
 
 CPT::~CPT()
 {

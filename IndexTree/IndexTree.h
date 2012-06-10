@@ -81,12 +81,6 @@ T* IndexTree<T>:: getProbabilities(int* parentValues)
 	TreeNode<T>* n = root;
 
 	//we consider all the parents of the node
-//	for(int i = 0 ; i<this->target->parents->getSize();i++)
-//	{
-//		//we traverse from one branch node to the next by taking appropritate paths
-//		//depending on the values supplied in the parentValues
-//		n = ((BranchNode<T>*)n)->branchingNodes[parentValues[i]];
-//	}
 	for(int i = 0; i < this->target->parents2->size();i++)
 	{
 		//we traverse from one branch node to the next by taking appropritate paths
@@ -142,7 +136,6 @@ void IndexTree<T>::constructTree()
 	}
 	else
 	{
-		cout << "no parents" << "\n" << endl;
 		//there are no parents of target node, create leaf node immediately
 		root = new LeafNode<T>(target);
 		//fill in the probabilities now
@@ -200,39 +193,6 @@ void IndexTree<T>::constructTree(DataTable* table)
 	{
 
 		//for each parent do (notice that if there are no parents this loop is skipped):
-//		for(Node<Variable>* node = target->parents->start; node!=NULL; node=node->getNext())
-//		{
-//
-//			//if we are considering the first parent
-//			if(node == target->parents->start)
-//			{
-//				//if the root is not constructed yet (in the first case, acctually)
-//				if(root==NULL)
-//					root = new BranchNode<T>(node->getContent());
-//
-//				//we take the value for first parent from the table and store it in acc
-//				//throughout this loop acc will correspond to the value of the previous parent wrt to "node"
-//				acc = table->getCase(j)[node->getContent()->id];
-//
-//				//we set the current branchin' node to the root (which represents the first parent)
-//				//throughout this loop n will correspond to the branching node of the previous parent wrt to "node"
-//				n = (BranchNode<T>*)root;
-//			}
-//			else
-//			{
-//				//if we are considering other parents
-//				if(n->branchingNodes[acc]==NULL)
-//				{
-//					//if the branching node of the previous parent had never been expanded for its current value
-//					//we create new brancing node that should correspond to the current parent referenced by "node"
-//					n->branchingNodes[acc] = new BranchNode<T>(node->getContent());
-//				}
-//				//if it already exists just traverse it
-//				n=(BranchNode<T>*)n->branchingNodes[acc];
-//
-//				//and query the table for the value of the current parent
-//				acc = table->getCase(j)[node->getContent()->id];
-//			}
 			map<int, Variable*>::iterator it;
 			for(it = target->parents2->begin(); it != target->parents2->end(); it++)
 			{

@@ -42,13 +42,16 @@ BayesNetwork::BayesNetwork(char* filePath,int numCases)
 	this->lookupTable = new LookupTable(this->data->getNumCases()+r);
 }
 
-BayesNetwork::BayesNetwork(char* filePath,int numCases,char* cpt_file[])
+BayesNetwork::BayesNetwork(char* filePath,int numCases,char* cpt_file, char* outputDataFile)
 {
 	numVars = 0;
 	data = NULL;
 	vars = NULL;
 	readStructure(filePath);
-	generateDataFileCPT(numCases,cpt_file);
+	data = generateDataFileCPT(numCases,cpt_file);
+	if(outputDataFile != NULL)
+		data->saveTableToFile(outputDataFile);
+
 	int r = maxR();
 	this->lookupTable = new LookupTable(this->data->getNumCases()+r);
 }
@@ -66,12 +69,15 @@ int BayesNetwork::maxR()
 }
 
 //sampling wrapper for CPTs from files
-DataTable* BayesNetwork::generateDataFileCPT(int numCases, char* cpt_file[])
+DataTable* BayesNetwork::generateDataFileCPT(int numCases, char* cpt_file)
 {
+	cout << "Reading CPTs...\n";
 	for(int i = 0; i<numVars;i++)
 	{
-		vars[i]->cpt->readValuesFromFile(cpt_file[i]);
+		vars[i]->cpt = new CPT(vars[i]);
+		vars[i]->cpt->readValuesFromFile(cpt_file);
 	}
+	cout << "CPTs read\n";
 	return generateData(numCases);
 }
 
@@ -249,7 +255,8 @@ void BayesNetwork::readStructure(char* filePath)
 
 					}
 					file.close();
-
+					cout << "Dependencies created\n";
+					cout << "Structure created\n";
 				}
 				else
 				{
@@ -298,7 +305,7 @@ BayesNetwork* BayesNetwork::learnStructure(int maxNumParent, int numThreads)
 			Variable* currentVariable = vars[i];
 
 			double contributionOld = g(currentVariable,NULL);
-			cout << currentVariable->name << " value without parents " << contributionOld << "\n" << endl;
+//			cout << currentVariable->name->data() << " value without parents " << contributionOld << "\n" << endl;
 			bool canProceed = true;
 			while(canProceed && maxNumParent > currentVariable->parents2->size())
 			{
@@ -318,7 +325,7 @@ BayesNetwork* BayesNetwork::learnStructure(int maxNumParent, int numThreads)
 				else
 					canProceed = false;
 			}
-			currentVariable->print();
+//			currentVariable->print();
 		}
 	}
 
@@ -397,10 +404,10 @@ void BayesNetwork::print()
 		vars[i]->printChildren();
 	}
 
-	if(data!=NULL)
-	{
-		data->print();
-	}
+//	if(data!=NULL)
+//	{
+//		data->print();
+//	}
 }
 
 BayesNetwork::~BayesNetwork() {

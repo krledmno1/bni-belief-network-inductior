@@ -6,7 +6,7 @@
 #include "Grid.h"
 
 Graph::Graph(int delta,BayesNetwork* net, int* nodes, int numNodes)
-//: m_line_width(1)
+: m_line_width(1)
 {
 	this->delta = delta;
 	network = net;
@@ -68,18 +68,10 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   //draws other arcs between the longest path nodes
   for(int i=0;i<length-1;i++)
   {
-//	  for(Node<Variable>* node = network->getVariables()[nodes[i]]->children->start; node!=NULL; node = node->getNext())
-//	  {
-//		  if(node->getContent()!=network->getVariables()[nodes[i+1]])
-//		  {
-//			  grid.drawAngledArc(grid.centerX,1+i*2,grid.centerX+grid.arcIntentLevel,grid.centerX,node->getContent()->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
-//			  grid.updateArcIndentLevel();
-//		  }
-//	  }
 	  std::map<int, Variable*>::iterator it;
 	  for(it = network->getVariables()[nodes[i]]->children2->begin(); it != network->getVariables()[nodes[i]]->children2->end(); it++)
 	  {
-		  if(it->second != network->getVariables()[nodes[i+1]])
+		  if(it->second->drawn == true && it->second != network->getVariables()[nodes[i+1]])
 		  {
 			  grid.drawAngledArc(grid.centerX,1+i*2,grid.centerX+grid.arcIntentLevel,grid.centerX,it->second->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
 			  grid.updateArcIndentLevel();
@@ -97,17 +89,10 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 		  if(!network->getVariables()[i]->drawn && !network->getVariables()[i]->parents2->empty())
 		  {
 			  int higestYBox=-1;
-//			  for(Node<Variable>* node = network->getVariables()[i]->parents->start; node!=NULL; node = node->getNext())
-//			  {
-//				  if(node->getContent()->yBox>higestYBox && node->getContent()->drawn)
-//				  {
-//					  higestYBox=node->getContent()->yBox;
-//				  }
-//			  }
 			  std::map<int, Variable*>::iterator it;
 			  for(it = network->getVariables()[i]->parents2->begin(); it != network->getVariables()[i]->parents2->end(); it++)
 			  {
-				  if(it->second->yBox>higestYBox && it->second->drawn)
+				  if(it->second->yBox > higestYBox && it->second->drawn)
 				  {
 					  higestYBox=it->second->yBox;
 				  }
@@ -123,12 +108,6 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 				  grid.updateNodeIndentLevel();
 
 				  //draw the arcs from the already drawn parents
-//				  for(Node<Variable>* node = network->getVariables()[i]->parents->start; node!=NULL; node = node->getNext())
-//				  {
-//					  if(node->getContent()->drawn)
-//						  grid.drawArc(node->getContent()->xBox,node->getContent()->yBox,network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
-//				  }
-
 				  for(it = network->getVariables()[i]->parents2->begin(); it != network->getVariables()[i]->parents2->end(); it++)
 				  {
 					  if(it->second->drawn)
@@ -136,12 +115,6 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 				  }
 
 				  //draw the arcs to the already drawn children
-//				  for(Node<Variable>* node = network->getVariables()[i]->children->start; node!=NULL; node = node->getNext())
-//				  {
-//					  if(node->getContent()->drawn)
-//						  grid.drawArc(network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,node->getContent()->xBox,node->getContent()->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
-//				  }
-
 				  for(it = network->getVariables()[i]->children2->begin(); it != network->getVariables()[i]->children2->end(); it++)
 				  {
 					  if(it->second->drawn)
@@ -158,19 +131,12 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 		  if(!network->getVariables()[i]->drawn && !network->getVariables()[i]->children2->empty())
 		  {
 			  int lowestBox = 1+numVars*2;
-//			  for(Node<Variable>* node = network->getVariables()[i]->children->start; node!=NULL; node = node->getNext())
-//			  {
-//				  if(node->getContent()->yBox<lowestBox && node->getContent()->drawn)
-//				  {
-//					  lowestBox=node->getContent()->yBox;
-//				  }
-//			  }
 			  std::map<int, Variable*>::iterator it;
 			  for(it = network->getVariables()[i]->children2->begin(); it != network->getVariables()[i]->children2->end(); it++)
 			  {
-				  if(it->second->yBox<lowestBox && it->second->drawn)
+				  if(it->second->yBox < lowestBox && it->second->drawn)
 				  {
-					  lowestBox=it->second->yBox;
+					  lowestBox = it->second->yBox;
 				  }
 			  }
 			  if(lowestBox<1+2*numVars)
@@ -184,11 +150,6 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
 
 				  //draw the arcs from the already drawn parents
-//				  for(Node<Variable>* node = network->getVariables()[i]->parents->start; node!=NULL; node = node->getNext())
-//				  {
-//					  if(node->getContent()->drawn)
-//						  grid.drawArc(node->getContent()->xBox,node->getContent()->yBox,network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
-//				  }
 				  for(it = network->getVariables()[i]->parents2->begin(); it != network->getVariables()[i]->parents2->end(); it++)
 				  {
 					  if(it->second->drawn)
@@ -196,11 +157,6 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 				  }
 
 				  //draw the arcs to the already drawn children
-//				  for(Node<Variable>* node = network->getVariables()[i]->children->start; node!=NULL; node = node->getNext())
-//				  {
-//					  if(node->getContent()->drawn)
-//						  grid.drawArc(network->getVariables()[i]->xBox,network->getVariables()[i]->yBox,node->getContent()->xBox,node->getContent()->yBox,(Cairo::RefPtr<Cairo::Context>&)cr);
-//				  }
 				  for(it = network->getVariables()[i]->children2->begin(); it != network->getVariables()[i]->children2->end(); it++)
 				  {
 					  if(it->second->drawn)
@@ -209,16 +165,10 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 			  }
 
 		  }
-
-
 	  }
-
-
-
-
   }
 
-  delete [] nodes;
+//  delete [] nodes;
   return true;
 }
 

@@ -279,6 +279,22 @@ int main(int argc, char* argv[])
 		}
 	}
 
+//	char* BNStructureFile = strdup("ALARM.bn");
+//	char* CPTFile = strdup("ALARM.cdt");
+	char* DataFile = strdup("ALARM.dat");
+//	BayesNetwork* net = new BayesNetwork(BNStructureFile, 100, CPTFile, DataFile);
+	DataTable* data = new DataTable(DataFile);
+	BayesNetwork* newNet = new BayesNetwork(data);
+	newNet->learnStructure(4,1);
+	newNet->print();
+
+//	delete newNet;
+//	delete net;
+//	delete BNStructureFile;
+//	delete CPTFile;
+	delete newNet;
+	delete DataFile;
+//	delete data;
 
 //	char* bla = strdup("/home/denis/Documents/PoliMi/AA/project/BNI2/data2.txt");
 //	DataTable d(bla);
@@ -287,52 +303,51 @@ int main(int argc, char* argv[])
 //	newNet->learnStructure(2, numThreads);
 //	newNet->print();
 
-	char* bla = strdup("/home/denis/Documents/PoliMi/AA/project/BNI2/structure2.txt");
-	BayesNetwork* newNet = new BayesNetwork(bla,5);
-//	newNet->learnStructure(2, numThreads);
-	newNet->print();
-	network = newNet;
-	numVars = network->getNumVars();
+//	char* bla = strdup("/home/denis/Documents/PoliMi/AA/project/BNI2/structure2.txt");
+//	BayesNetwork* newNet = new BayesNetwork(bla,5);
+////	newNet->learnStructure(2, numThreads);
+//	newNet->print();
+//	network = newNet;
+//	numVars = network->getNumVars();
 
-	int numPotentialRoots = 0;
-	int* potentialRoots = getRoots(&numPotentialRoots);
-	LinkedList<int>** reachabilityLists = getReachabilityLists(potentialRoots, numPotentialRoots);
-	LinkedList<int>** graphList = removeEquivalentGraphs(&numPotentialRoots, reachabilityLists);
+//	int numPotentialRoots = 0;
+//	int* potentialRoots = getRoots(&numPotentialRoots);
+//	LinkedList<int>** reachabilityLists = getReachabilityLists(potentialRoots, numPotentialRoots);
+//	LinkedList<int>** graphList = removeEquivalentGraphs(&numPotentialRoots, reachabilityLists);
+//
+//
+//	cout << "Drawing graphs\n" << endl;
+//	Gtk::Main kit(argc, argv);
+//	Gtk::Window** wins = new Gtk::Window* [numPotentialRoots];
+//	Graph** graphs = new Graph* [numPotentialRoots];
+//	for(int i = 1; i < 2; i++) //numPotentialRoots; i++)
+//	{
+//		cout << "Graph for root #" << (i + 1) << "\n";
+//		int* longestPath = new int[graphList[i]->getSize()];
+//		int j = 0;
+//		for(Node<int>* node = graphList[i]->start; node != NULL; node = node->getNext())
+//		{
+//			longestPath[j] = *(node->getContent());
+//			cout << longestPath[j] << " ";
+//			j++;
+//		}
+//		cout << "\nCopied list into array\n" << endl;
+//
+//		wins[i] = new Gtk::Window();
+//		wins[i]->set_title("Graph");
+//		wins[i]->set_default_size(500,500);
+//		graphs[i] = new Graph(40,newNet, longestPath, graphList[i]->getSize());
+//
+//		cout << "Created graph\n" << endl;
+//
+//		wins[i]->add(*(graphs[i]));
+//		(*(graphs[i])).show();
+//		kit.run(*(wins[i]));
+//
+//		cout << "Created window\n" << endl;
+//	}
 
-
-	cout << "Drawing graphs\n" << endl;
-	Gtk::Main kit(argc, argv);
-	Gtk::Window** wins = new Gtk::Window* [numPotentialRoots];
-	Graph** graphs = new Graph* [numPotentialRoots];
-	for(int i = 0; i < numPotentialRoots; i++)
-	{
-		cout << "Graph for root #" << (i + 1) << "\n";
-		int* longestPath = new int[graphList[i]->getSize()];
-		int j = 0;
-		for(Node<int>* node = graphList[i]->start; node != NULL; node = node->getNext())
-		{
-			longestPath[j] = *(node->getContent());
-			cout << longestPath[j] << " ";
-			j++;
-		}
-		cout << "\nCopied list into array\n" << endl;
-
-		wins[i] = new Gtk::Window();
-		wins[i]->set_title("Graph");
-		wins[i]->set_default_size(500,500);
-		graphs[i] = new Graph(40,newNet, longestPath, graphList[i]->getSize());
-
-		cout << "Created graph\n" << endl;
-
-		wins[i]->add(*(graphs[i]));
-		(*(graphs[i])).show();
-		kit.run(*(wins[i]));
-
-		cout << "Created window\n" << endl;
-	}
-
-	delete bla;
-	delete newNet;
+//	delete bla;
 	return 0;
 }
 

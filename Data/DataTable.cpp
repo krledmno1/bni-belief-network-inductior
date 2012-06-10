@@ -193,7 +193,7 @@ DataTable::DataTable(char* filePath) {
 
 					variables[varIndex] = new Variable(varName);	//destroyed by Bayes network or Data Table...
 					varIndex++;
-					cout << *varName << "\n";
+//					cout << *varName << "\n";
 				}
 
 				//count cases
@@ -225,7 +225,7 @@ DataTable::DataTable(char* filePath) {
 				getline(file, line);
 				while(!file.eof()) // For each line
 				{
-					cout << "\nCase " << i + 1 << ": ";
+//					cout << "\nCase " << i + 1 << ": ";
 
 					j = 0;
 					oldSepIndex = 0;
@@ -242,7 +242,7 @@ DataTable::DataTable(char* filePath) {
 						table[i][j] = valueId;
 						j++;
 
-						cout << valueId <<  "  ";
+//						cout << valueId <<  "  ";
 					}
 
 
@@ -252,7 +252,7 @@ DataTable::DataTable(char* filePath) {
 
 				}
 
-				cout << "\n" << endl;
+				cout << "Data has been read\n" << endl;
 
 			}
 			else
@@ -275,29 +275,30 @@ void DataTable::saveTableToFile(char* filePath) {
 		cout << "\nWriting to file: " << filePath << "\n";
 
 
-		string** varNames = new string* [numVars];
-		string** valueNames = new string* [numVars];
-		for(int i = 0; i < numVars; i++) {
-			varNames[i] = variables[i]->name;
-			valueNames[i] = *(variables[i]->getValueNames());
-		}
+//		string** varNames = new string* [numVars];
+//		string*** valueNames = new string** [numVars];
+//		for(int i = 0; i < numVars; i++) {
+//			varNames[i] = variables[i]->name;
+//			valueNames[i] = variables[i]->getValueNames();
+//		}
 
 		ofstream file;
 		file.open (filePath);
 
 		string firstLine = "";
 		for(int i = 0; i < numVars; i++) {
-			firstLine.append(varNames[i]->data()).append(",");
+			firstLine.append(variables[i]->name->data()).append(",");
 		}
 		firstLine.erase(firstLine.size() - 1, 1);
 
 		file << firstLine << "\n";
-
 		string* line;
+		map<int, string*>* valueNames;
 		for(int i = 0 ; i < numCases; i++) {
 			line = new string();
 			for(int j = 0; j < numVars; j++) {
-				line->append(valueNames[j][table[i][j]].data()).append(",");
+				line->append((*(variables[j]->values2))[table[i][j]]->data()).append(",");
+//				line->append((*(valueNames[j]))[table[i][j]].data()).append(",");
 			}
 			line->erase(line->size() - 1, 1);
 
