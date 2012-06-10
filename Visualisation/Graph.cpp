@@ -19,15 +19,19 @@ Graph::Graph(int delta,BayesNetwork* net, int* nodes, int numNodes)
 
 Graph::~Graph()
 {
+	delete [] nodes;
 }
 
 bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
+
+	int count = 0;
+
 	//height in tiles (one tile = delta*delta)
-	int height = 2*numVars+2;
+	int height = 2*numVars;
 
 	//width in tiles (one tile = delta*delta)
-	int width = (numVars-2)*(numVars-1)+4;
+	int width = 2*numVars;
 
 	//Allocate actual space
 	Gtk::Allocation allocation = get_allocation();
@@ -60,6 +64,7 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 	  network->getVariables()[nodes[i]]->yBox = y;
 	  network->getVariables()[nodes[i]]->xBox = grid.centerX;
 	  network->getVariables()[nodes[i]]->drawn = true;
+	  count++;
 	  if(i<length-1)
 		  grid.drawArc(grid.centerX,y,grid.centerX,y+2,(Cairo::RefPtr<Cairo::Context>&)cr);
 
@@ -82,6 +87,8 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   //draw the rest of the nodes
   if(length<numVars)
   {
+	  while(count<numVars)
+	  {
 
 	  //first those who have drawn parents
 	  for(int i = 0;i<numVars;i++)
@@ -104,6 +111,7 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 				  network->getVariables()[i]->yBox=higestYBox+2;
 				  network->getVariables()[i]->xBox=grid.centerX+grid.nodeIntentLevel;
 				  network->getVariables()[i]->drawn = true;
+				  count++;
 				  grid.drawNode(network->getVariables()[i]->id, grid.centerX+grid.nodeIntentLevel,higestYBox+2,(Cairo::RefPtr<Cairo::Context>&)cr);
 				  grid.updateNodeIndentLevel();
 
@@ -145,6 +153,7 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 				  network->getVariables()[i]->yBox=lowestBox-2;
 				  network->getVariables()[i]->xBox=grid.centerX+grid.nodeIntentLevel;
 				  network->getVariables()[i]->drawn = true;
+				  count++;
 				  grid.drawNode(network->getVariables()[i]->id, grid.centerX+grid.nodeIntentLevel,lowestBox-2,(Cairo::RefPtr<Cairo::Context>&)cr);
 				  grid.updateNodeIndentLevel();
 
@@ -167,8 +176,11 @@ bool Graph::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 		  }
 	  }
   }
+  }
+  network->clearDraw();
 
 //  delete [] nodes;
+
   return true;
 }
 

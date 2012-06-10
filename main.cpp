@@ -15,16 +15,18 @@
 
 #include "Visualisation/Graph.h"
 #include <gtkmm.h>
+#include "Visualisation/Temp.h"
+#include <omp.h>
 
-int numVars;
-BayesNetwork* network;
+
 
 /*
  * Returns the list (ids) of potential roots and throught the argument "numRoots"
  * returns the number of potential roots
  */
-int* getRoots(int* numRoots)
+int* getRoots(int* numRoots, BayesNetwork* network)
 {
+	int numVars = network->getNumVars();
 	*numRoots = 0;
 	for(int i = 0; i < numVars; i++)
 	{
@@ -60,7 +62,7 @@ int* getRoots(int* numRoots)
  *
  * Through the "path" argument an array is returned whose elements are the the nodes along the longest path.
  */
-int getSubgraphDepth(int rootId, int* depth, int** path)
+int getSubgraphDepth(int rootId, int* depth, int** path, BayesNetwork* network)
 {
 	// Set the current depth and variable
 	Variable* currNode = network->getVariables()[rootId];
@@ -95,7 +97,7 @@ int getSubgraphDepth(int rootId, int* depth, int** path)
 			// Temporary variable used to get the child's path and compare it to the best one
 			int* childPath;
 			// Recursively invoke the method on the child
-			int subgraphDepth = getSubgraphDepth(it->second->id, depth, &childPath);
+			int subgraphDepth = getSubgraphDepth(it->second->id, depth, &childPath,network);
 			// If the child has a longer path than the current one update the "maxDepth" and "bestPath" values
 			if(maxDepth < subgraphDepth)
 			{
@@ -125,14 +127,18 @@ int getSubgraphDepth(int rootId, int* depth, int** path)
 /*
  * Depth-first search of the reachable nodes.
  */
-void reachableNodes(Variable* var, LinkedList<int>* nodes)
+void reachableNodes(Variable* var, LinkedList<int>* nodes, bool* visited)
 {
 	int* id = new int(var->id);
-	nodes->addToBack(id);
+	if(!visited[*id])
+	{
+		nodes->addToBack(id);
+		visited[*id]=true;
+	}
 	map<int, Variable*>::iterator it;
 	for(it = var->children2->begin(); it != var->children2->end(); it++)
 	{
-		reachableNodes(it->second, nodes);
+		reachableNodes(it->second, nodes, visited);
 	}
 }
 
@@ -140,14 +146,19 @@ void reachableNodes(Variable* var, LinkedList<int>* nodes)
  * For each potential root node generates a reachability list and returns an
  * array of the lists.
  */
-LinkedList<int>** getReachabilityLists(int* roots, int numRoots)
+LinkedList<int>** getReachabilityLists(int* roots, int numRoots, BayesNetwork* network)
 {
 	LinkedList<int>** reachabilityLists = new LinkedList<int>* [numRoots];
 	for(int i = 0; i < numRoots; i++)
 	{
 		cout << "DAG num: " << (i + 1) << "\n";
 		reachabilityLists[i] = new LinkedList<int>();
-		reachableNodes(network->getVariables()[roots[i]], reachabilityLists[i]);
+		bool* visited = new bool[network->getNumVars()];
+		for(int j=0;j<network->getNumVars();j++)
+		{
+			visited[j] = false;
+		}
+		reachableNodes(network->getVariables()[roots[i]], reachabilityLists[i], visited);
 
 		for(Node<int>* node = reachabilityLists[i]->start; node != NULL; node = node->getNext())
 			cout << *(node->getContent()) << " ";
@@ -161,7 +172,7 @@ LinkedList<int>** getReachabilityLists(int* roots, int numRoots)
  * Checks if some of the potential roots belong to the same graph
  * and removes one if that's the case.
  */
-LinkedList<int>** removeEquivalentGraphs(int* numRoots, LinkedList<int>** reachabilityLists)
+int* removeEquivalentGraphs(int* numRoots, LinkedList<int>** reachabilityLists)
 {
 	// Keeps track of the number of deleted nodes
 	int numDeleted = 0;
@@ -216,19 +227,67 @@ LinkedList<int>** removeEquivalentGraphs(int* numRoots, LinkedList<int>** reacha
 
 	// Creates an array of true roots and their reachability lists
 	int finalSize = *numRoots - numDeleted;
-	LinkedList<int>** graphList = new LinkedList<int>* [finalSize];
+	int* graphList = new int [finalSize];
 	int j = 0;
 	for(int i = 0; i < *numRoots && j < finalSize; i++)
 	{
 		if(reachabilityLists[i] != NULL)
 		{
-			graphList[j] = reachabilityLists[i];
+			graphList[j] = *(reachabilityLists[i]->start->getContent());
 			j++;
 		}
 	}
 	*numRoots = finalSize;
 	return graphList;
 }
+
+void visualize(BayesNetwork* newNet)
+{
+		int numPotentialRoots = 0;
+		int* potentialRoots = getRoots(&numPotentialRoots,newNet);
+		LinkedList<int>** reachabilityLists = getReachabilityLists(potentialRoots, numPotentialRoots,newNet);
+		int* graphList = removeEquivalentGraphs(&numPotentialRoots, reachabilityLists);
+
+
+		Gtk::Main kit;
+		Gtk::Notebook note;
+		Gtk::Window win;
+		win.add(note);
+		win.set_title("Graph");
+		win.set_default_size(1000,700);
+
+		Graph** g = new Graph*[numPotentialRoots];
+		for(int i = 0 ;i<numPotentialRoots;i++)
+		{
+			int depth = 0;
+			int* longestPath;
+			int length = getSubgraphDepth(graphList[i],&depth,&longestPath,newNet);
+
+			g[i] = new Graph(25,newNet,longestPath,length);
+
+
+			std::string Result;
+			std::stringstream convert;
+			convert << "Partition " << i+1;
+			Result = convert.str();
+
+			note.append_page(*(g[i]), Result);
+		}
+
+		win.show_all_children(true);
+		kit.run(win);
+
+
+
+		for(int i = 0 ;i<numPotentialRoots;i++)
+		{
+			delete g[i];
+		}
+		delete [] g;
+}
+
+
+
 
 /*
  * Arguments:
@@ -239,7 +298,7 @@ int main(int argc, char* argv[])
 {
 	srand((unsigned int) time(0));
 
-	int numThreads = 1; // number of threads to use
+	int numThreads = 7; // number of threads to use
 	int u = 5; // max number of parents a node can have
 
 	/*
@@ -279,76 +338,35 @@ int main(int argc, char* argv[])
 		}
 	}
 
-//	char* BNStructureFile = strdup("ALARM.bn");
-//	char* CPTFile = strdup("ALARM.cdt");
-	char* DataFile = strdup("ALARM.dat");
-//	BayesNetwork* net = new BayesNetwork(BNStructureFile, 100, CPTFile, DataFile);
-	DataTable* data = new DataTable(DataFile);
-	BayesNetwork* newNet = new BayesNetwork(data);
-	newNet->learnStructure(4,1);
-	newNet->print();
 
-//	delete newNet;
-//	delete net;
-//	delete BNStructureFile;
-//	delete CPTFile;
-	delete newNet;
-	delete DataFile;
-//	delete data;
+	/////////////////////////////////
+	//Main part
+	////////////////////////////////
 
-//	char* bla = strdup("/home/denis/Documents/PoliMi/AA/project/BNI2/data2.txt");
-//	DataTable d(bla);
-//	BayesNetwork b(&d);
-//	BayesNetwork* newNet = new BayesNetwork(&b);
-//	newNet->learnStructure(2, numThreads);
+
+//	char* path = strdup("/home/krle/workspace/BNIProject/bni-belief-network-inductior/structure2.txt");
+//	BayesNetwork* newNet = new BayesNetwork(path,5);
 //	newNet->print();
+//	numVars = newNet->getNumVars();
 
-//	char* bla = strdup("/home/denis/Documents/PoliMi/AA/project/BNI2/structure2.txt");
-//	BayesNetwork* newNet = new BayesNetwork(bla,5);
-////	newNet->learnStructure(2, numThreads);
-//	newNet->print();
-//	network = newNet;
-//	numVars = network->getNumVars();
+	char* path1 = strdup("/home/krle/workspace/BNIProject/bni-belief-network-inductior/ALARM.bn");
+	char* path2 = strdup("/home/krle/workspace/BNIProject/bni-belief-network-inductior/ALARM.cdt");
+	char* path3 = strdup("/home/krle/workspace/BNIProject/bni-belief-network-inductior/ALARM.dat");
 
-//	int numPotentialRoots = 0;
-//	int* potentialRoots = getRoots(&numPotentialRoots);
-//	LinkedList<int>** reachabilityLists = getReachabilityLists(potentialRoots, numPotentialRoots);
-//	LinkedList<int>** graphList = removeEquivalentGraphs(&numPotentialRoots, reachabilityLists);
-//
-//
-//	cout << "Drawing graphs\n" << endl;
-//	Gtk::Main kit(argc, argv);
-//	Gtk::Window** wins = new Gtk::Window* [numPotentialRoots];
-//	Graph** graphs = new Graph* [numPotentialRoots];
-//	for(int i = 1; i < 2; i++) //numPotentialRoots; i++)
-//	{
-//		cout << "Graph for root #" << (i + 1) << "\n";
-//		int* longestPath = new int[graphList[i]->getSize()];
-//		int j = 0;
-//		for(Node<int>* node = graphList[i]->start; node != NULL; node = node->getNext())
-//		{
-//			longestPath[j] = *(node->getContent());
-//			cout << longestPath[j] << " ";
-//			j++;
-//		}
-//		cout << "\nCopied list into array\n" << endl;
-//
-//		wins[i] = new Gtk::Window();
-//		wins[i]->set_title("Graph");
-//		wins[i]->set_default_size(500,500);
-//		graphs[i] = new Graph(40,newNet, longestPath, graphList[i]->getSize());
-//
-//		cout << "Created graph\n" << endl;
-//
-//		wins[i]->add(*(graphs[i]));
-//		(*(graphs[i])).show();
-//		kit.run(*(wins[i]));
-//
-//		cout << "Created window\n" << endl;
-//	}
+	BayesNetwork bayes(path1,500000,path2,path3);
+	BayesNetwork b = bayes;
+	b.learnStructure(u,numThreads);
 
-//	delete bla;
+	b.print();
+	//visualize(&b);
+
+
+	delete path1;
+	delete path2;
+	delete path3;
+
 	return 0;
 }
+
 
 
