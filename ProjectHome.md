@@ -1,0 +1,1 @@
+Optimized implementation of Bayesian method for constructing probabilistic networks from databases.
